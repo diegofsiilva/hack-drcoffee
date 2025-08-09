@@ -581,19 +581,45 @@
             </div>
         </div>
 
-        <!-- Camera Modal -->
+        <!-- Camera Choice Modal -->
         <div class="modal" id="cameraModal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <h3>📸 Analisar Planta</h3>
+                <p>Escolha como fornecer a imagem da planta:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; margin: 20px 0;">
+                    <button class="capture-btn" onclick="openCameraStream()" style="width: 100%; border-radius: 10px; padding: 15px;">
+                        📷 Usar Câmera
+                    </button>
+                    <button class="capture-btn" onclick="triggerFileUpload()" style="width: 100%; border-radius: 10px; padding: 15px;">
+                        📤 Fazer Upload
+                    </button>
+                </div>
+                
+                <!-- Hidden file input for uploads -->
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+                
+                <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
+                    Use uma imagem clara com boa iluminação
+                </p>
+            </div>
+        </div>
+
+        <!-- Camera Stream Modal -->
+        <div class="modal" id="cameraStreamModal">
             <div class="modal-content">
                 <button class="close-btn" onclick="closeModal()">&times;</button>
                 <h3>📸 Fotografar Planta</h3>
                 <p>Posicione a folha doente no centro da tela</p>
                 
                 <div class="camera-preview">
-                    <span style="font-size: 64px; opacity: 0.5;">📷</span>
+                    <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
                     <div class="camera-overlay"></div>
                 </div>
                 
-                <button class="capture-btn" onclick="capturePhoto()">📸</button>
+                <button class="capture-btn" onclick="capturePhotoFromCamera()">📸</button>
                 <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
                     Certifique-se de que a iluminação está adequada
                 </p>
@@ -708,84 +734,112 @@
 
         // Navegação entre telas
         function showScreen(screenId) {
-            // Esconder todas as telas
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active');
             });
             
-            // Mostrar tela selecionada
             document.getElementById(screenId).classList.add('active');
             
-            // Atualizar navegação
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
             
-            // Ativar item de navegação correspondente
             if (screenId === 'homeScreen') {
                 document.querySelector('.nav-item').classList.add('active');
             }
         }
 
-        // Abrir câmera
+        // Abrir modal de escolha (câmera ou upload)
         function openCamera() {
             document.getElementById('cameraModal').style.display = 'block';
             document.querySelector('#cameraModal .modal-content').classList.add('bounce-in');
         }
 
-        // Capturar foto e processar
-        function capturePhoto() {
+        // Abrir stream da câmera
+        async function openCameraStream() {
             closeModal();
+            const video = document.getElementById('cameraVideo');
             
-            // Mostrar modal de análise
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = stream;
+                document.getElementById('cameraStreamModal').style.display = 'block';
+                document.querySelector('#cameraStreamModal .modal-content').classList.add('bounce-in');
+            } catch (error) {
+                console.error('Erro ao acessar a câmera:', error);
+                alert('Não foi possível acessar a câmera. Tente fazer upload de uma imagem.');
+                closeModal();
+                openCamera();
+            }
+        }
+
+        // Acionar input de upload
+        function triggerFileUpload() {
+            document.getElementById('imageUpload').click();
+        }
+
+        // Lidar com upload de arquivo
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                closeModal();
+                processImage(file);
+            }
+        }
+
+        // Capturar foto da câmera
+        function capturePhotoFromCamera() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob(blob => {
+                const stream = video.srcObject;
+                stream.getTracks().forEach(track => track.stop());
+                
+                closeModal();
+                processImage(blob);
+            }, 'image/jpeg');
+        }
+
+        // Processar imagem (câmera ou upload)
+        function processImage(imageBlob) {
             document.getElementById('analysisModal').style.display = 'block';
             
-            // Simular análise da IA
+            const processingTime = Math.random() * 3000 + 2000;
+            
             setTimeout(() => {
                 document.getElementById('analysisModal').style.display = 'none';
                 
-                // Gerar resultado aleatório
-                const diseases = [
-                    {
-                        name: 'Ferrugem do Cafeeiro',
-                        confidence: 94,
-                        description: 'Doença fúngica comum em cafezais. Identificada pelas manchas alaranjadas características na parte inferior das folhas.',
-                        treatments: [
-                            { type: '🏠 Receita Caseira', name: 'Calda bordalesa (sulfato de cobre + cal)', cost: 'R$ 8,50' },
-                            { type: '🧪 Tratamento Profissional', name: 'Fungicida à base de triazol', cost: 'R$ 45,00' }
-                        ]
-                    },
-                    {
-                        name: 'Cercosporiose',
-                        confidence: 89,
-                        description: 'Doença fúngica que causa manchas escuras com halos amarelados. Mais comum em períodos úmidos.',
-                        treatments: [
-                            { type: '🏠 Receita Caseira', name: 'Chá de cavalinha + óleo de neem', cost: 'R$ 5,20' },
-                            { type: '🧪 Tratamento Profissional', name: 'Fungicida sistêmico', cost: 'R$ 38,00' }
-                        ]
-                    },
-                    {
-                        name: 'Broca do Café',
-                        confidence: 91,
-                        description: 'Inseto que perfura os frutos do café. Identificado pelos pequenos furos nos frutos.',
-                        treatments: [
-                            { type: '🏠 Receita Caseira', name: 'Armadilha com álcool + detergente', cost: 'R$ 12,00' },
-                            { type: '🧪 Tratamento Profissional', name: 'Inseticida específico para broca', cost: 'R$ 55,00' }
-                        ]
-                    },
-                    {
-                        name: 'Planta Saudável',
-                        confidence: 96,
-                        description: 'Parabéns! Sua planta está saudável. Continue com os cuidados preventivos.',
-                        treatments: [
-                            { type: '🌱 Prevenção', name: 'Adubação balanceada + irrigação adequada', cost: 'R$ 15,00/mês' }
-                        ]
-                    }
-                ];
+                const rand = Math.random();
+                let selectedDisease;
                 
-                const result = diseases[Math.floor(Math.random() * diseases.length)];
+                if (rand < 0.25) {
+                    selectedDisease = diseaseDatabase[0];
+                } else if (rand < 0.45) {
+                    selectedDisease = diseaseDatabase[1];
+                } else if (rand < 0.60) {
+                    selectedDisease = diseaseDatabase[2];
+                } else if (rand < 0.75) {
+                    selectedDisease = diseaseDatabase[3];
+                } else {
+                    selectedDisease = diseaseDatabase[4];
+                }
+                
+                const result = {
+                    ...selectedDisease,
+                    confidence: Math.floor(Math.random() * 15) + 85
+                };
+                
                 showResult(result);
-            }, 3000);
+            }, processingTime);
         }
 
         // Mostrar resultado
@@ -794,7 +848,6 @@
             document.getElementById('confidence').textContent = result.confidence + '% de confiança';
             document.getElementById('diseaseDescription').textContent = result.description;
             
-            // Atualizar tratamentos
             const treatmentSection = document.querySelector('.treatment-section');
             const existingOptions = treatmentSection.querySelectorAll('.treatment-option');
             existingOptions.forEach(option => option.remove());
@@ -813,12 +866,13 @@
             document.getElementById('resultModal').style.display = 'block';
             document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
             
-            // Adicionar ao histórico
             addToHistory(result);
             
-            // Atualizar contador de análises
             analysisCount++;
             document.getElementById('analysisCount').textContent = analysisCount.toLocaleString();
+            
+            vibrate([100, 50, 100]);
+            playSound('success');
         }
 
         // Adicionar ao histórico
@@ -830,7 +884,6 @@
                 id: Date.now()
             });
             
-            // Manter apenas os últimos 10
             if (historyData.length > 10) {
                 historyData.splice(10);
             }
@@ -843,11 +896,9 @@
             const historyData = JSON.parse(localStorage.getItem('agroSosHistory') || '[]');
             const historyScreen = document.getElementById('historyScreen');
             
-            // Remover itens antigos
             const oldItems = historyScreen.querySelectorAll('.history-item');
             oldItems.forEach(item => item.remove());
             
-            // Adicionar título de volta
             const title = document.createElement('h2');
             title.textContent = '📋 Seu Histórico';
             title.style.marginBottom = '20px';
@@ -888,13 +939,12 @@
                 historyScreen.appendChild(historyDiv);
             });
             
-            // Adicionar estatísticas de economia
             const economyDiv = document.createElement('div');
             economyDiv.style.marginTop = '30px';
             economyDiv.style.textAlign = 'center';
             economyDiv.style.opacity = '0.7';
             
-            const totalSavings = historyData.length * 150; // R$ 150 economia média por análise
+            const totalSavings = historyData.length * 150;
             economyDiv.innerHTML = `
                 <p>Economia total: <strong style="color: #22c55e;">R$ ${totalSavings.toLocaleString()}</strong></p>
                 <p>Versus consultoria tradicional</p>
@@ -920,6 +970,13 @@
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.style.display = 'none';
             });
+            
+            const video = document.getElementById('cameraVideo');
+            if (video.srcObject) {
+                const stream = video.srcObject;
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
         }
 
         // Configurar PWA
@@ -935,7 +992,6 @@
             e.preventDefault();
             deferredPrompt = e;
             
-            // Mostrar botão de instalação após 5 segundos
             setTimeout(() => {
                 if (deferredPrompt) {
                     const installBtn = document.createElement('button');
@@ -977,7 +1033,6 @@
             const diffY = startY - endY;
             const diffX = startX - endX;
 
-            // Swipe para cima = abrir câmera
             if (diffY > 50 && Math.abs(diffX) < 100) {
                 openCamera();
             }
@@ -985,7 +1040,6 @@
 
         // Adicionar efeitos sonoros (simulados)
         function playSound(type) {
-            // Em uma implementação real, você adicionaria sons
             console.log(`🔊 Som: ${type}`);
         }
 
@@ -1001,7 +1055,6 @@
             updateOnlineStatus();
             loadHistory();
             
-            // Adicionar eventos de clique com feedback
             document.querySelectorAll('button').forEach(btn => {
                 btn.addEventListener('click', () => {
                     vibrate([50]);
@@ -1009,10 +1062,8 @@
                 });
             });
             
-            // Animação inicial
             document.querySelector('.container').classList.add('fade-in');
             
-            // Simular notificações push
             setTimeout(() => {
                 if ('Notification' in window && Notification.permission === 'granted') {
                     new Notification('🚨 AgroSOS', {
@@ -1028,7 +1079,7 @@
             Notification.requestPermission();
         }
 
-        // Simulação de análise de IA mais realista
+        // Banco de dados de doenças
         const diseaseDatabase = [
             {
                 name: 'Ferrugem do Cafeeiro',
@@ -1077,84 +1128,13 @@
             }
         ];
 
-        // Melhorar função de resultado
-        function showResult(result) {
-            document.getElementById('diseaseName').textContent = result.name;
-            document.getElementById('confidence').textContent = result.confidence + '% de confiança';
-            document.getElementById('diseaseDescription').textContent = result.description;
-            
-            // Limpar tratamentos existentes
-            const treatmentSection = document.querySelector('.treatment-section');
-            const existingOptions = treatmentSection.querySelectorAll('.treatment-option');
-            existingOptions.forEach(option => option.remove());
-            
-            // Adicionar novos tratamentos
-            result.treatments.forEach(treatment => {
-                const treatmentDiv = document.createElement('div');
-                treatmentDiv.className = 'treatment-option';
-                treatmentDiv.innerHTML = `
-                    <strong>${treatment.type}</strong>
-                    <p>${treatment.name}</p>
-                    <p class="price">Custo: ${treatment.cost}</p>
-                `;
-                treatmentSection.appendChild(treatmentDiv);
-            });
-            
-            document.getElementById('resultModal').style.display = 'block';
-            document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
-            
-            // Vibração de sucesso
-            vibrate([100, 50, 100]);
-            playSound('success');
-        }
-
-        // Melhorar captura de foto com seleção inteligente
-        function capturePhoto() {
-            closeModal();
-            
-            // Mostrar modal de análise
-            document.getElementById('analysisModal').style.display = 'block';
-            
-            // Simular tempo de processamento mais realista (2-5 segundos)
-            const processingTime = Math.random() * 3000 + 2000;
-            
-            setTimeout(() => {
-                document.getElementById('analysisModal').style.display = 'none';
-                
-                // Selecionar doença baseada em probabilidades realistas
-                const rand = Math.random();
-                let selectedDisease;
-                
-                if (rand < 0.25) {
-                    selectedDisease = diseaseDatabase[0]; // Ferrugem - 25%
-                } else if (rand < 0.45) {
-                    selectedDisease = diseaseDatabase[1]; // Cercosporiose - 20%
-                } else if (rand < 0.60) {
-                    selectedDisease = diseaseDatabase[2]; // Broca - 15%
-                } else if (rand < 0.75) {
-                    selectedDisease = diseaseDatabase[3]; // Phoma - 15%
-                } else {
-                    selectedDisease = diseaseDatabase[4]; // Saudável - 25%
-                }
-                
-                // Criar nova instância com confiança aleatória
-                const result = {
-                    ...selectedDisease,
-                    confidence: Math.floor(Math.random() * 15) + 85
-                };
-                
-                showResult(result);
-            }, processingTime);
-        }
-
         // Atualização dinâmica da comunidade
         function updateCommunityData() {
             const communityItems = document.querySelectorAll('.community-item');
             const diseases = ['Ferrugem severa', 'Cercosporiose', 'Broca ativa', 'Mancha de Phoma'];
             
             setInterval(() => {
-                // Simular novos casos ocasionalmente
-                if (Math.random() < 0.1) { // 10% de chance a cada intervalo
+                if (Math.random() < 0.1) {
                     const newCase = {
                         name: `Produtor ${Math.floor(Math.random() * 1000)}`,
                         disease: diseases[Math.floor(Math.random() * diseases.length)],
@@ -1162,15 +1142,11 @@
                     };
                     
                     console.log('🆕 Novo caso na comunidade:', newCase);
-                    // Em uma implementação real, atualizaria a UI
                 }
             }, 15000);
         }
 
-        // Inicializar atualizações da comunidade
-        updateCommunityData();
-
-        // Easter eggs e funcionalidades extras
+        // Easter eggs
         let clickCount = 0;
         document.querySelector('.logo').addEventListener('click', () => {
             clickCount++;
@@ -1211,7 +1187,7 @@
             }
         }
 
-        // Modo escuro/claro (futura implementação)
+        // Modo escuro/claro
         function toggleTheme() {
             document.body.classList.toggle('dark-theme');
         }
@@ -1230,7 +1206,6 @@
         // Carregar preferências
         function loadPreferences() {
             const prefs = JSON.parse(localStorage.getItem('agroSosPrefs') || '{}');
-            // Aplicar preferências carregadas
             return prefs;
         }
 
@@ -1238,8 +1213,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPreferences();
             savePreferences();
+            updateCommunityData();
             
-            // Mostrar dica inicial apenas na primeira visita
             if (!localStorage.getItem('agroSosFirstVisit')) {
                 setTimeout(() => {
                     alert('👋 Bem-vindo ao AgroSOS!\n\n📸 Dica: Deslize para cima ou clique em "Analisar Planta" para começar!\n\n🌱 Ajudamos você a identificar doenças em segundos!');
