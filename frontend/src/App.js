@@ -19,13 +19,14 @@ const queryClient = new QueryClient();
 
 // Firebase config
 const firebaseConfig = {
-  apiKey: "sua-api-key",
-  authDomain: "agrosos-app.firebaseapp.com",
-  projectId: "agrosos-app",
-  storageBucket: "agrosos-app.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "sua-app-id"
-};
+    apiKey: "AIzaSyAS61AI20calUeX55-bqWOvyP5MEBBOZWg",
+    authDomain: "agrosos-hackathon.firebaseapp.com",
+    projectId: "agrosos-hackathon",
+    storageBucket: "agrosos-hackathon.firebasestorage.app",
+    messagingSenderId: "1093051708129",
+    appId: "1:1093051708129:web:34ba5a87a6cddae3d33da0",
+    measurementId: "G-14MY1MCR3E"
+  };
 
 const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);
