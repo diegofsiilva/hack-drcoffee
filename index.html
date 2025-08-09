@@ -979,6 +979,12 @@
             }
         }
 
+        // Verificar se algum modal está aberto
+        function isModalOpen() {
+            const modals = document.querySelectorAll('.modal');
+            return Array.from(modals).some(modal => modal.style.display === 'block');
+        }
+
         // Configurar PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4ge30p')
@@ -1021,19 +1027,31 @@
         // Navegação por gestos (swipe)
         let startY = 0;
         let startX = 0;
+        let isScrolling = false;
 
         document.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
             startX = e.touches[0].clientX;
+            isScrolling = false;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const diffY = Math.abs(startY - currentY);
+            if (diffY > 20) {
+                isScrolling = true;
+            }
         });
 
         document.addEventListener('touchend', (e) => {
+            if (isScrolling) return;
+
             const endY = e.changedTouches[0].clientY;
             const endX = e.changedTouches[0].clientX;
             const diffY = startY - endY;
             const diffX = startX - endX;
 
-            if (diffY > 50 && Math.abs(diffX) < 100) {
+            if (diffY > 100 && Math.abs(diffX) < 100 && !isModalOpen()) {
                 openCamera();
             }
         });
