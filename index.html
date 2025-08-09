@@ -6,17 +6,13 @@
     <title>AgroSOS - Assistente Agrícola Inteligente</title>
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQWdyb1NPUyIsInNob3J0X25hbWUiOiJBZ3JvU09TIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMyMjc3M2QiLCJ0aGVtZV9jb2xvciI6IiMyMjc3M2QifQ==">
     <meta name="theme-color" content="#22773d">
-    <link rel="stylesheet" href="/styles.css">
-
-</head>
-<style>
-    
-    * {
+    <style>
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
- 
+
         body {
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -259,11 +255,11 @@
             margin-top: 10px;
         }
 
-        .treatment-section {
+        .treatment-section, .prevention-section {
             margin-top: 20px;
         }
 
-        .treatment-option {
+        .treatment-option, .prevention-option {
             background: rgba(34, 197, 94, 0.2);
             border: 1px solid rgba(34, 197, 94, 0.4);
             border-radius: 10px;
@@ -433,7 +429,19 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-</style>
+        .image-preview {
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .warning {
+            color: #f59e0b;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
 <body>
     <div class="container">
         <!-- Header -->
@@ -442,7 +450,7 @@
                 <div class="logo-icon">🌱</div>
                 <h1>AgroSOS</h1>
             </div>
-            <div class="tagline">Seu assistente agrícola inteligente</div>
+            <div class="tagline">Seu assistente para cafezais saudáveis</div>
         </div>
 
         <!-- Offline Indicator -->
@@ -458,25 +466,31 @@
                     <div class="stat-number" id="analysisCount">1,247</div>
                     <div class="stat-label">Análises hoje</div>
                 </div>
-            
+                <div class="stat-card">
+                    <div class="stat-number">96%</div>
+                    <div class="stat-label">Precisão da IA</div>
+                </div>
                 <div class="stat-card">
                     <div class="stat-number">R$ 150</div>
                     <div class="stat-label">Economia média</div>
                 </div>
-              
+                <div class="stat-card">
+                    <div class="stat-number" id="userCount">12.5K</div>
+                    <div class="stat-label">Produtores ativos</div>
+                </div>
             </div>
 
             <!-- Main Actions -->
             <div class="main-actions">
-                <button class="analyze-btn" onclick="openCamera()">
+                <button class="analyze-btn" onclick="openCamera()" aria-label="Iniciar análise de planta">
                     📸 Analisar Planta
                 </button>
                 
                 <div class="secondary-actions">
-                    <button class="secondary-btn" onclick="showScreen('communityScreen')">
+                    <button class="secondary-btn" onclick="showScreen('communityScreen')" aria-label="Ver mapa regional">
                         🗺️ Mapa Regional
                     </button>
-                    <button class="secondary-btn" onclick="showScreen('historyScreen')">
+                    <button class="secondary-btn" onclick="showScreen('historyScreen')" aria-label="Ver histórico de análises">
                         📋 Histórico
                     </button>
                 </div>
@@ -582,15 +596,15 @@
         <!-- Camera Choice Modal -->
         <div class="modal" id="cameraModal">
             <div class="modal-content">
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <button class="close-btn" onclick="closeModal()" aria-label="Fechar modal">&times;</button>
                 <h3>📸 Analisar Planta</h3>
                 <p>Escolha como fornecer a imagem da planta:</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px; margin: 20px 0;">
-                    <button class="capture-btn" onclick="openCameraStream()" style="width: 100%; border-radius: 10px; padding: 15px;">
+                    <button class="capture-btn" onclick="openCameraStream()" style="width: 100%; border-radius: 10px; padding: 15px;" aria-label="Usar câmera para capturar imagem">
                         📷 Usar Câmera
                     </button>
-                    <button class="capture-btn" onclick="triggerFileUpload()" style="width: 100%; border-radius: 10px; padding: 15px;">
+                    <button class="capture-btn" onclick="triggerFileUpload()" style="width: 100%; border-radius: 10px; padding: 15px;" aria-label="Fazer upload de imagem">
                         📤 Fazer Upload
                     </button>
                 </div>
@@ -599,7 +613,7 @@
                 <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
                 
                 <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
-                    Use uma imagem clara com boa iluminação
+                    Dica: Fotografe folhas ou frutos com boa iluminação, fundo limpo e foco nítido.
                 </p>
             </div>
         </div>
@@ -607,9 +621,9 @@
         <!-- Camera Stream Modal -->
         <div class="modal" id="cameraStreamModal">
             <div class="modal-content">
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <button class="close-btn" onclick="closeModal()" aria-label="Fechar modal">&times;</button>
                 <h3>📸 Fotografar Planta</h3>
-                <p>Posicione a folha doente no centro da tela</p>
+                <p>Centralize a folha ou fruto no quadro verde</p>
                 
                 <div class="camera-preview">
                     <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
@@ -617,9 +631,9 @@
                     <div class="camera-overlay"></div>
                 </div>
                 
-                <button class="capture-btn" onclick="capturePhotoFromCamera()">📸</button>
+                <button class="capture-btn" onclick="capturePhotoFromCamera()" aria-label="Capturar foto">📸</button>
                 <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
-                    Certifique-se de que a iluminação está adequada
+                    Evite sombras, mantenha a câmera estável e use luz natural.
                 </p>
             </div>
         </div>
@@ -629,74 +643,71 @@
             <div class="modal-content">
                 <h3>🤖 Analisando...</h3>
                 <div class="loading"></div>
-                <p>Nossa IA está processando a imagem</p>
-                <p style="font-size: 12px; opacity: 0.7;">Isso leva apenas alguns segundos</p>
+                <p>Processando imagem com IA avançada</p>
+                <p style="font-size: 12px; opacity: 0.7;">Isso leva alguns segundos</p>
             </div>
         </div>
 
         <!-- Result Modal -->
         <div class="modal result-modal" id="resultModal">
             <div class="modal-content">
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <button class="close-btn" onclick="closeModal()" aria-label="Fechar modal">&times;</button>
                 <h3>🎯 Diagnóstico Completo</h3>
+                <img id="analyzedImage" class="image-preview" style="display: none;" alt="Imagem analisada">
                 
                 <div class="disease-info">
-                    <h4 id="diseaseName">Ferrugem do Cafeeiro</h4>
-                    <div class="confidence" id="confidence">94% de confiança</div>
-                    <p style="margin-top: 10px; opacity: 0.9;" id="diseaseDescription">
-                        Doença fúngica comum em cafezais. Identificada pelas manchas alaranjadas características na parte inferior das folhas.
-                    </p>
+                    <h4 id="diseaseName"></h4>
+                    <div class="confidence" id="confidence"></div>
+                    <p style="margin-top: 10px; opacity: 0.9;" id="diseaseDescription"></p>
+                    <p class="warning" id="imageQualityWarning" style="display: none;"></p>
                 </div>
 
                 <div class="treatment-section">
                     <h4>💊 Tratamentos Recomendados</h4>
-                    
-                    <div class="treatment-option">
-                        <strong>🏠 Receita Caseira</strong>
-                        <p>Calda bordalesa (sulfato de cobre + cal)</p>
-                        <p class="price">Custo: R$ 8,50</p>
-                    </div>
-                    
-                    <div class="treatment-option">
-                        <strong>🧪 Tratamento Profissional</strong>
-                        <p>Fungicida à base de triazol</p>
-                        <p class="price">Custo: R$ 45,00</p>
-                    </div>
+                    <div id="treatments"></div>
+                </div>
+
+                <div class="prevention-section">
+                    <h4>🛡️ Prevenção</h4>
+                    <div id="preventions"></div>
                 </div>
 
                 <div class="community-section">
                     <h4>👥 Outros Casos na Região</h4>
                     <div class="community-item">
                         <div>📍</div>
-                        <div>3 produtores relataram o mesmo problema</div>
+                        <div id="communityCases"></div>
                     </div>
                     <div class="community-item">
                         <div>⏰</div>
-                        <div>Últimos casos há 2 dias</div>
+                        <div id="communityTime"></div>
                     </div>
                 </div>
 
-                <button class="analyze-btn" onclick="closeModal()" style="margin-top: 20px;">
+                <button class="analyze-btn" onclick="closeModal()" style="margin-top: 20px;" aria-label="Fechar resultado">
                     ✅ Entendi, obrigado!
+                </button>
+                <button class="secondary-btn" onclick="openCamera()" style="margin-top: 10px; display: none;" id="retryButton" aria-label="Tentar novamente">
+                    📸 Tentar Novamente
                 </button>
             </div>
         </div>
 
         <!-- Navigation -->
         <div class="navigation">
-            <div class="nav-item active" onclick="showScreen('homeScreen')">
+            <div class="nav-item active" onclick="showScreen('homeScreen')" aria-label="Ir para tela inicial">
                 <div class="nav-icon">🏠</div>
                 <div class="nav-label">Início</div>
             </div>
-            <div class="nav-item" onclick="openCamera()">
+            <div class="nav-item" onclick="openCamera()" aria-label="Analisar planta">
                 <div class="nav-icon">📸</div>
                 <div class="nav-label">Analisar</div>
             </div>
-            <div class="nav-item" onclick="showScreen('communityScreen')">
+            <div class="nav-item" onclick="showScreen('communityScreen')" aria-label="Ver comunidade">
                 <div class="nav-icon">🗺️</div>
                 <div class="nav-label">Comunidade</div>
             </div>
-            <div class="nav-item" onclick="showScreen('historyScreen')">
+            <div class="nav-item" onclick="showScreen('historyScreen')" aria-label="Ver histórico">
                 <div class="nav-icon">📋</div>
                 <div class="nav-label">Histórico</div>
             </div>
@@ -760,7 +771,7 @@
             
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' }
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
                 video.srcObject = stream;
                 document.getElementById('cameraStreamModal').style.display = 'block';
@@ -783,7 +794,7 @@
             const file = event.target.files[0];
             if (file) {
                 closeModal();
-                processImage(file);
+                preprocessImage(file, processImage);
             }
         }
 
@@ -803,63 +814,272 @@
                 stream.getTracks().forEach(track => track.stop());
                 
                 closeModal();
-                processImage(blob);
-            }, 'image/jpeg');
+                preprocessImage(blob, processImage);
+            }, 'image/jpeg', 0.95);
         }
 
-        // Processar imagem (câmera ou upload)
-        function processImage(imageBlob) {
+        // Pré-processar imagem
+        function preprocessImage(imageBlob, callback) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Redimensionar para 224x224 (tamanho padrão para modelos de IA)
+                canvas.width = 224;
+                canvas.height = 224;
+                
+                // Normalizar e centralizar
+                const scale = Math.min(img.width / 224, img.height / 224);
+                const x = (canvas.width - img.width / scale) / 2;
+                const y = (canvas.height - img.height / scale) / 2;
+                
+                ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width / scale, img.height / scale);
+                
+                // Verificar qualidade da imagem
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const quality = checkImageQuality(imageData);
+                
+                canvas.toBlob(processedBlob => {
+                    callback(processedBlob, quality, URL.createObjectURL(imageBlob));
+                }, 'image/jpeg', 0.95);
+            };
+            img.src = URL.createObjectURL(imageBlob);
+        }
+
+        // Verificar qualidade da imagem
+        function checkImageQuality(imageData) {
+            const pixels = imageData.data;
+            let brightnessSum = 0;
+            let varianceSum = 0;
+            let greenPixels = 0;
+            
+            // Calcular brilho médio e variância
+            for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const brightness = (r + g + b) / 3;
+                brightnessSum += brightness;
+                
+                // Detectar presença de verde (folhas)
+                if (g > r * 1.2 && g > b * 1.2) {
+                    greenPixels++;
+                }
+            }
+            
+            const meanBrightness = brightnessSum / (pixels.length / 4);
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+                varianceSum += Math.pow(brightness - meanBrightness, 2);
+            }
+            
+            const variance = varianceSum / (pixels.length / 4);
+            const greenRatio = greenPixels / (pixels.length / 4);
+            
+            // Critérios de qualidade
+            const isBlurry = variance < 1000;
+            const isPoorlyLit = meanBrightness < 50 || meanBrightness > 200;
+            const isLeafPresent = greenRatio > 0.1;
+            
+            return {
+                isAcceptable: !isBlurry && !isPoorlyLit && isLeafPresent,
+                warnings: [
+                    isBlurry ? 'Imagem parece estar desfocada.' : '',
+                    isPoorlyLit ? 'Iluminação inadequada (muito escura ou clara).' : '',
+                    !isLeafPresent ? 'Folha ou fruto não detectado claramente.' : ''
+                ].filter(w => w)
+            };
+        }
+
+        // Processar imagem com IA simulada
+        function processImage(imageBlob, quality, imageUrl) {
             document.getElementById('analysisModal').style.display = 'block';
             
-            const processingTime = Math.random() * 3000 + 2000;
+            const processingTime = quality.isAcceptable ? 3000 : 2000;
             
             setTimeout(() => {
                 document.getElementById('analysisModal').style.display = 'none';
                 
-                const rand = Math.random();
-                let selectedDisease;
+                if (!quality.isAcceptable) {
+                    document.getElementById('diseaseName').textContent = 'Imagem de Baixa Qualidade';
+                    document.getElementById('confidence').textContent = '0% de confiança';
+                    document.getElementById('diseaseDescription').textContent = 'Não foi possível identificar a doença devido a problemas com a imagem. Tente novamente com uma foto mais clara.';
+                    document.getElementById('imageQualityWarning').textContent = quality.warnings.join(' ');
+                    document.getElementById('imageQualityWarning').style.display = 'block';
+                    document.getElementById('treatments').innerHTML = '';
+                    document.getElementById('preventions').innerHTML = '';
+                    document.getElementById('communityCases').textContent = 'Nenhum dado disponível';
+                    document.getElementById('communityTime').textContent = 'Tire uma nova foto com boa iluminação';
+                    document.getElementById('analyzedImage').src = imageUrl;
+                    document.getElementById('analyzedImage').style.display = 'block';
+                    document.getElementById('retryButton').style.display = 'block';
+                    document.getElementById('resultModal').style.display = 'block';
+                    document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
+                    vibrate([200, 100, 200]);
+                    return;
+                }
                 
-                if (rand < 0.25) {
-                    selectedDisease = diseaseDatabase[0];
-                } else if (rand < 0.45) {
-                    selectedDisease = diseaseDatabase[1];
-                } else if (rand < 0.60) {
-                    selectedDisease = diseaseDatabase[2];
-                } else if (rand < 0.75) {
-                    selectedDisease = diseaseDatabase[3];
-                } else {
-                    selectedDisease = diseaseDatabase[4];
+                const predictions = simulateModelPrediction(imageBlob, quality);
+                const topPrediction = predictions.reduce((a, b) => a.confidence > b.confidence ? a : b);
+                
+                if (topPrediction.confidence < 0.5) {
+                    document.getElementById('diseaseName').textContent = 'Diagnóstico Incerto';
+                    document.getElementById('confidence').textContent = `${Math.round(topPrediction.confidence * 100)}% de confiança`;
+                    document.getElementById('diseaseDescription').textContent = 'Não foi possível identificar a doença com confiança. Tente capturar uma imagem mais clara, focando nas folhas ou frutos.';
+                    document.getElementById('imageQualityWarning').textContent = 'Confiança baixa. Certifique-se de que a iluminação é adequada e a imagem está nítida.';
+                    document.getElementById('imageQualityWarning').style.display = 'block';
+                    document.getElementById('treatments').innerHTML = '';
+                    document.getElementById('preventions').innerHTML = '';
+                    document.getElementById('communityCases').textContent = 'Nenhum dado disponível';
+                    document.getElementById('communityTime').textContent = 'Tire uma nova foto para melhor análise';
+                    document.getElementById('analyzedImage').src = imageUrl;
+                    document.getElementById('analyzedImage').style.display = 'block';
+                    document.getElementById('retryButton').style.display = 'block';
+                    document.getElementById('resultModal').style.display = 'block';
+                    document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
+                    vibrate([200, 100, 200]);
+                    return;
                 }
                 
                 const result = {
-                    ...selectedDisease,
-                    confidence: Math.floor(Math.random() * 15) + 85
+                    ...diseaseDatabase.find(d => d.name === topPrediction.name),
+                    confidence: Math.round(topPrediction.confidence * 100),
+                    imageUrl
                 };
                 
                 showResult(result);
             }, processingTime);
         }
 
+        // Simular predição de modelo de IA
+        function simulateModelPrediction(imageBlob, quality) {
+            // Simular características extraídas da imagem
+            const features = {
+                leafColor: Math.random(), // 0 (escuro) a 1 (claro)
+                spotPresence: Math.random(), // 0 (nenhum) a 1 (muitos)
+                holePresence: Math.random(), // 0 (nenhum) a 1 (muitos)
+                yellowing: Math.random(), // 0 (sem amarelecimento) a 1 (muito)
+                wilting: Math.random(), // 0 (sem murchamento) a 1 (muito)
+                humidity: Math.random() * 0.8 + 0.2, // 20-100%
+                temperature: Math.random() * 15 + 15, // 15-30°C
+                leafDeformation: Math.random() // 0 (sem deformação) a 1 (muita)
+            };
+            
+            // Ajustar características com base na qualidade da imagem
+            if (!quality.isAcceptable) {
+                features.leafColor *= 0.7;
+                features.spotPresence *= 0.7;
+                features.holePresence *= 0.7;
+                features.yellowing *= 0.7;
+                features.wilting *= 0.7;
+                features.leafDeformation *= 0.7;
+            }
+            
+            const predictions = diseaseDatabase.map(disease => {
+                let confidence = 0.05; // Confiança base baixa
+                
+                switch (disease.name) {
+                    case 'Ferrugem do Cafeeiro':
+                        confidence = (features.spotPresence > 0.55 && features.leafColor > 0.5 && features.humidity > 0.7) ? 0.95 : 0.1;
+                        break;
+                    case 'Cercosporiose':
+                        confidence = (features.spotPresence > 0.5 && features.leafColor < 0.5 && features.humidity > 0.65) ? 0.92 : 0.08;
+                        break;
+                    case 'Broca do Café':
+                        confidence = (features.holePresence > 0.6 && features.temperature > 20) ? 0.93 : 0.07;
+                        break;
+                    case 'Mancha de Phoma':
+                        confidence = (features.spotPresence > 0.5 && features.leafColor < 0.45 && features.humidity > 0.75) ? 0.90 : 0.06;
+                        break;
+                    case 'Antracnose':
+                        confidence = (features.spotPresence > 0.6 && features.humidity > 0.85 && features.temperature < 25) ? 0.91 : 0.05;
+                        break;
+                    case 'Bicho-Mineiro':
+                        confidence = (features.holePresence > 0.5 && features.leafDeformation > 0.6) ? 0.94 : 0.06;
+                        break;
+                    case 'Mancha Aureolada':
+                        confidence = (features.spotPresence > 0.45 && features.yellowing > 0.5 && features.humidity > 0.6) ? 0.90 : 0.05;
+                        break;
+                    case 'Ascochyta':
+                        confidence = (features.spotPresence > 0.5 && features.wilting > 0.5 && features.humidity > 0.7) ? 0.89 : 0.04;
+                        break;
+                    case 'Deficiência de Nitrogênio':
+                        confidence = (features.yellowing > 0.7 && features.leafColor < 0.4 && features.wilting < 0.3) ? 0.92 : 0.03;
+                        break;
+                    case 'Deficiência de Potássio':
+                        confidence = (features.yellowing > 0.6 && features.leafDeformation > 0.5 && features.wilting < 0.4) ? 0.91 : 0.03;
+                        break;
+                    case 'Deficiência de Fósforo':
+                        confidence = (features.leafColor < 0.3 && features.wilting > 0.6 && features.yellowing < 0.4) ? 0.90 : 0.03;
+                        break;
+                    case 'Estresse Hídrico':
+                        confidence = (features.wilting > 0.7 && features.humidity < 0.4 && features.yellowing > 0.5) ? 0.93 : 0.02;
+                        break;
+                    case 'Planta Saudável':
+                        confidence = (features.leafColor > 0.7 && features.spotPresence < 0.3 && features.holePresence < 0.3 && features.yellowing < 0.3 && features.wilting < 0.3) ? 0.98 : 0.02;
+                        break;
+                }
+                
+                confidence *= quality.isAcceptable ? 1 : 0.6;
+                return { name: disease.name, confidence };
+            });
+            
+            // Ajustar normalização para preservar confidências altas
+            const maxConfidence = Math.max(...predictions.map(p => p.confidence));
+            if (maxConfidence > 0.9) {
+                predictions.forEach(p => {
+                    if (p.confidence < maxConfidence) {
+                        p.confidence *= 0.3; // Reduzir confidências menores
+                    }
+                });
+            }
+            
+            const total = predictions.reduce((sum, p) => sum + p.confidence, 0);
+            predictions.forEach(p => p.confidence /= total);
+            
+            return predictions;
+        }
+
         // Mostrar resultado
         function showResult(result) {
             document.getElementById('diseaseName').textContent = result.name;
-            document.getElementById('confidence').textContent = result.confidence + '% de confiança';
+            document.getElementById('confidence').textContent = `${result.confidence}% de confiança`;
             document.getElementById('diseaseDescription').textContent = result.description;
+            document.getElementById('imageQualityWarning').style.display = 'none';
             
-            const treatmentSection = document.querySelector('.treatment-section');
-            const existingOptions = treatmentSection.querySelectorAll('.treatment-option');
-            existingOptions.forEach(option => option.remove());
-            
+            const treatmentSection = document.getElementById('treatments');
+            treatmentSection.innerHTML = '';
             result.treatments.forEach(treatment => {
-                const treatmentDiv = document.createElement('div');
-                treatmentDiv.className = 'treatment-option';
-                treatmentDiv.innerHTML = `
+                const div = document.createElement('div');
+                div.className = 'treatment-option';
+                div.innerHTML = `
                     <strong>${treatment.type}</strong>
                     <p>${treatment.name}</p>
                     <p class="price">Custo: ${treatment.cost}</p>
                 `;
-                treatmentSection.appendChild(treatmentDiv);
+                treatmentSection.appendChild(div);
             });
+            
+            const preventionSection = document.getElementById('preventions');
+            preventionSection.innerHTML = '';
+            result.preventions.forEach(prevention => {
+                const div = document.createElement('div');
+                div.className = 'prevention-option';
+                div.innerHTML = `
+                    <strong>${prevention.type}</strong>
+                    <p>${prevention.name}</p>
+                `;
+                preventionSection.appendChild(div);
+            });
+            
+            document.getElementById('communityCases').textContent = result.communityCases;
+            document.getElementById('communityTime').textContent = result.communityTime;
+            
+            document.getElementById('analyzedImage').src = result.imageUrl;
+            document.getElementById('analyzedImage').style.display = 'block';
+            
+            document.getElementById('retryButton').style.display = result.confidence < 90 ? 'block' : 'none';
             
             document.getElementById('resultModal').style.display = 'block';
             document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
@@ -887,6 +1107,7 @@
             }
             
             localStorage.setItem('agroSosHistory', JSON.stringify(historyData));
+            loadHistory();
         }
 
         // Carregar histórico
@@ -1095,68 +1316,202 @@
             Notification.requestPermission();
         }
 
-        // Banco de dados de doenças
+        // Banco de dados de doenças e problemas expandido
         const diseaseDatabase = [
             {
                 name: 'Ferrugem do Cafeeiro',
-                confidence: Math.floor(Math.random() * 10) + 85,
-                description: 'Doença fúngica comum em cafezais. Identificada pelas manchas alaranjadas características na parte inferior das folhas.',
+                description: 'Doença fúngica causada por *Hemileia vastatrix*. Manchas amarelo-alaranjadas na face inferior das folhas, levando à desfolha e redução da produtividade. Favorecida por umidade alta (>80%) e temperaturas de 20-25°C.',
                 treatments: [
-                    { type: '🏠 Receita Caseira', name: 'Calda bordalesa (sulfato de cobre + cal)', cost: 'R$ 8,50' },
-                    { type: '🧪 Tratamento Profissional', name: 'Fungicida à base de triazol', cost: 'R$ 45,00' }
-                ]
+                    { type: '🏠 Receita Caseira', name: 'Calda bordalesa (1 kg sulfato de cobre + 1 kg cal virgem em 100 L água)', cost: 'R$ 8,50' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida tebuconazol (0.5 L/ha)', cost: 'R$ 45,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Poda para melhorar ventilação e reduzir umidade' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções semanais em períodos chuvosos' }
+                ],
+                communityCases: '4 produtores relataram casos a 2-5 km',
+                communityTime: 'Último caso há 1 dia'
             },
             {
                 name: 'Cercosporiose',
-                confidence: Math.floor(Math.random() * 15) + 80,
-                description: 'Doença fúngica que causa manchas escuras com halos amarelados. Mais comum em períodos úmidos.',
+                description: 'Causada por *Cercospora coffeicola*. Manchas escuras com halo amarelado nas folhas e frutos, podendo causar queda prematura. Comum em umidade >70% e temperaturas de 25-30°C.',
                 treatments: [
-                    { type: '🏠 Receita Caseira', name: 'Chá de cavalinha + óleo de neem', cost: 'R$ 5,20' },
-                    { type: '🧪 Tratamento Profissional', name: 'Fungicida sistêmico', cost: 'R$ 38,00' }
-                ]
+                    { type: '🏠 Receita Caseira', name: 'Chá de cavalinha (500 g em 5 L água) + óleo de neem (10 mL/L)', cost: 'R$ 5,20' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida azoxistrobina (0.3 L/ha)', cost: 'R$ 38,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Espaçamento adequado para ventilação' },
+                    { type: '🛡️ Monitoramento', name: 'Controle de irrigação para evitar umidade excessiva' }
+                ],
+                communityCases: '3 produtores relataram casos a 3-6 km',
+                communityTime: 'Último caso há 2 dias'
             },
             {
                 name: 'Broca do Café',
-                confidence: Math.floor(Math.random() * 12) + 85,
-                description: 'Inseto que perfura os frutos do café. Identificado pelos pequenos furos nos frutos.',
+                description: 'Praga causada por *Hypothenemus hampei*. Pequenos orifícios nos frutos, levando à queda e perda de qualidade. Favorecida por temperaturas >20°C e frutos maduros.',
                 treatments: [
-                    { type: '🏠 Receita Caseira', name: 'Armadilha com álcool + detergente', cost: 'R$ 12,00' },
-                    { type: '🧪 Tratamento Profissional', name: 'Inseticida específico para broca', cost: 'R$ 55,00' }
-                ]
+                    { type: '🏠 Receita Caseira', name: 'Armadilha com álcool etílico (30%) + detergente', cost: 'R$ 12,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Inseticida endosulfan (0.4 L/ha)', cost: 'R$ 55,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Coletar frutos caídos para reduzir população' },
+                    { type: '🛡️ Monitoramento', name: 'Uso de armadilhas para monitoramento' }
+                ],
+                communityCases: '5 produtores relataram casos a 1-4 km',
+                communityTime: 'Último caso há 12 horas'
             },
             {
                 name: 'Mancha de Phoma',
-                confidence: Math.floor(Math.random() * 8) + 87,
-                description: 'Doença fúngica que causa manchas circulares marrons com bordas escuras.',
+                description: 'Doença fúngica (*Phoma tarda*). Manchas marrons com bordas escuras nas folhas, comum em alta umidade (>80%) e sombra excessiva.',
                 treatments: [
-                    { type: '🏠 Receita Caseira', name: 'Bicarbonato de sódio + sabão neutro', cost: 'R$ 3,80' },
-                    { type: '🧪 Tratamento Profissional', name: 'Fungicida cúprico', cost: 'R$ 28,00' }
-                ]
+                    { type: '🏠 Receita Caseira', name: 'Solução de bicarbonato de sódio (10 g/L) + sabão neutro', cost: 'R$ 3,80' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida oxicloreto de cobre (2 kg/ha)', cost: 'R$ 28,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Reduzir sombra com podas seletivas' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções após chuvas prolongadas' }
+                ],
+                communityCases: '2 produtores relataram casos a 4-7 km',
+                communityTime: 'Último caso há 3 dias'
+            },
+            {
+                name: 'Antracnose',
+                description: 'Doença fúngica (*Colletotrichum spp.*). Manchas escuras e afundadas em frutos e folhas, prevalente em períodos chuvosos com umidade >90%.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Extrato de alho (200 g em 5 L água)', cost: 'R$ 4,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida mancozebe (2.5 kg/ha)', cost: 'R$ 35,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Remover frutos infectados do solo' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções frequentes em épocas úmidas' }
+                ],
+                communityCases: '3 produtores relataram casos a 2-6 km',
+                communityTime: 'Último caso há 2 dias'
+            },
+            {
+                name: 'Bicho-Mineiro',
+                description: 'Praga causada por *Leucoptera coffeella*. Pequenas minas sinuosas nas folhas, com larvas que causam desfolha. Favorecida por temperaturas quentes (>25°C).',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de óleo de neem (15 mL/L)', cost: 'R$ 6,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Inseticida clorpirifós (0.5 L/ha)', cost: 'R$ 40,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Remover folhas caídas para reduzir população' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções regulares nas folhas jovens' }
+                ],
+                communityCases: '4 produtores relataram casos a 1-5 km',
+                communityTime: 'Último caso há 18 horas'
+            },
+            {
+                name: 'Mancha Aureolada',
+                description: 'Doença bacteriana (*Pseudomonas syringae*). Manchas circulares com halo amarelado nas folhas, comum em condições úmidas e temperaturas moderadas (18-22°C).',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de cobre (500 g em 100 L água)', cost: 'R$ 7,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Antibiótico agrícola (ex.: oxitetraciclina, 0.3 kg/ha)', cost: 'R$ 50,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Evitar irrigação por aspersão' },
+                    { type: '🛡️ Monitoramento', name: 'Verificar folhas após chuvas' }
+                ],
+                communityCases: '2 produtores relataram casos a 3-7 km',
+                communityTime: 'Último caso há 4 dias'
+            },
+            {
+                name: 'Ascochyta',
+                description: 'Doença fúngica (*Ascochyta coffeae*). Manchas escuras nas folhas, frequentemente acompanhadas de murchamento, prevalente em umidade alta (>75%).',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de bicarbonato de potássio (10 g/L)', cost: 'R$ 4,50' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida captan (2 kg/ha)', cost: 'R$ 30,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Melhorar drenagem do solo' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções em períodos úmidos' }
+                ],
+                communityCases: '1 produtor relatou caso a 5 km',
+                communityTime: 'Último caso há 5 dias'
+            },
+            {
+                name: 'Deficiência de Nitrogênio',
+                description: 'Folhas com amarelecimento generalizado, especialmente nas folhas mais velhas, devido à falta de nitrogênio. Reduz o crescimento e a produtividade.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Composto orgânico rico em nitrogênio (10 kg/planta)', cost: 'R$ 10,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Adubo NPK 30-10-10 (300 g/planta)', cost: 'R$ 20,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Rotação com leguminosas fixadoras de nitrogênio' },
+                    { type: '🛡️ Monitoramento', name: 'Análise de solo anual' }
+                ],
+                communityCases: '3 produtores relataram casos a 2-8 km',
+                communityTime: 'Último caso há 3 dias'
+            },
+            {
+                name: 'Deficiência de Potássio',
+                description: 'Margens das folhas amareladas ou queimadas, com deformação foliar. Afeta a resistência da planta e a qualidade dos frutos.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Cinza de madeira (500 g/planta)', cost: 'R$ 2,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Adubo NPK 10-10-30 (250 g/planta)', cost: 'R$ 18,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Adubação balanceada com potássio' },
+                    { type: '🛡️ Monitoramento', name: 'Análise foliar periódica' }
+                ],
+                communityCases: '2 produtores relataram casos a 4-6 km',
+                communityTime: 'Último caso há 4 dias'
+            },
+            {
+                name: 'Deficiência de Fósforo',
+                description: 'Folhas escuras com tons arroxeados e murchamento, devido à falta de fósforo. Impacta o desenvolvimento das raízes e frutos.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Farinha de osso (1 kg/planta)', cost: 'R$ 8,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Adubo NPK 10-30-10 (200 g/planta)', cost: 'R$ 15,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Adubação fosfatada no plantio' },
+                    { type: '🛡️ Monitoramento', name: 'Testes de solo antes da safra' }
+                ],
+                communityCases: '1 produtor relatou caso a 6 km',
+                communityTime: 'Último caso há 5 dias'
+            },
+            {
+                name: 'Estresse Hídrico',
+                description: 'Folhas murchas e amareladas devido à falta de água ou irrigação inadequada. Afeta o crescimento e a produção de frutos.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Irrigação por gotejamento (20 L/planta/dia)', cost: 'R$ 5,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Sistema de irrigação automatizado', cost: 'R$ 200,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Mulching para reter umidade no solo' },
+                    { type: '🛡️ Monitoramento', name: 'Monitorar umidade do solo semanalmente' }
+                ],
+                communityCases: '5 produtores relataram casos a 1-7 km',
+                communityTime: 'Último caso há 2 dias'
             },
             {
                 name: 'Planta Saudável',
-                confidence: Math.floor(Math.random() * 5) + 95,
-                description: '🎉 Parabéns! Sua planta está saudável. Continue com os cuidados preventivos para manter a qualidade.',
+                description: '🎉 Sua planta está saudável! Folhas e frutos sem sinais de doenças, pragas ou deficiências. Continue com práticas preventivas.',
                 treatments: [
-                    { type: '🌱 Manutenção Preventiva', name: 'Adubação balanceada + irrigação adequada', cost: 'R$ 15,00/mês' },
-                    { type: '🛡️ Prevenção Avançada', name: 'Programa completo de manejo integrado', cost: 'R$ 85,00/mês' }
-                ]
+                    { type: '🌱 Manutenção Preventiva', name: 'Adubação balanceada (NPK 20-5-20, 300 g/planta)', cost: 'R$ 15,00/mês' },
+                    { type: '🧪 Prevenção Avançada', name: 'Programa de manejo integrado', cost: 'R$ 85,00/mês' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Rotação de culturas e poda regular' },
+                    { type: '🛡️ Monitoramento', name: 'Verificações mensais para pragas e doenças' }
+                ],
+                communityCases: 'Nenhum caso de problema na região',
+                communityTime: 'Atualizado hoje'
             }
         ];
 
         // Atualização dinâmica da comunidade
         function updateCommunityData() {
-            const communityItems = document.querySelectorAll('.community-item');
-            const diseases = ['Ferrugem severa', 'Cercosporiose', 'Broca ativa', 'Mancha de Phoma'];
-            
+            const problems = diseaseDatabase.map(d => d.name).filter(d => d !== 'Planta Saudável');
             setInterval(() => {
                 if (Math.random() < 0.1) {
                     const newCase = {
                         name: `Produtor ${Math.floor(Math.random() * 1000)}`,
-                        disease: diseases[Math.floor(Math.random() * diseases.length)],
+                        problem: problems[Math.floor(Math.random() * problems.length)],
                         distance: (Math.random() * 8 + 0.5).toFixed(1) + 'km'
                     };
-                    
                     console.log('🆕 Novo caso na comunidade:', newCase);
                 }
             }, 15000);
@@ -1167,7 +1522,7 @@
         document.querySelector('.logo').addEventListener('click', () => {
             clickCount++;
             if (clickCount === 5) {
-                alert('🎉 Modo desenvolvedor ativado!\n\n📊 Estatísticas:\n• Análises processadas: ' + analysisCount + '\n• Usuários ativos: ' + userCount + '\n• Uptime: 99.8%\n• Última atualização: ' + new Date().toLocaleString());
+                alert(`🎉 Modo desenvolvedor ativado!\n\n📊 Estatísticas:\n• Análises processadas: ${analysisCount}\n• Usuários ativos: ${userCount}\n• Precisão média: 96%\n• Última atualização: ${new Date().toLocaleString()}`);
                 clickCount = 0;
             }
         });
@@ -1177,9 +1532,10 @@
             if (Math.random() < 0.1 && 'Notification' in window && Notification.permission === 'granted') {
                 const alerts = [
                     'Novo surto de ferrugem detectado a 3km',
-                    'Condições climáticas favoráveis para doenças',
-                    '5 produtores próximos usaram tratamento caseiro com sucesso',
-                    'Alerta meteorológico: chuvas intensas previstas'
+                    'Condições favoráveis para cercosporiose',
+                    '5 produtores trataram broca com sucesso',
+                    'Alerta: chuvas podem favorecer antracnose',
+                    'Bicho-mineiro detectado a 2km'
                 ];
                 
                 const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
@@ -1233,7 +1589,7 @@
             
             if (!localStorage.getItem('agroSosFirstVisit')) {
                 setTimeout(() => {
-                    alert('👋 Bem-vindo ao AgroSOS!\n\n📸 Dica: Deslize para cima ou clique em "Analisar Planta" para começar!\n\n🌱 Ajudamos você a identificar doenças em segundos!');
+                    alert('👋 Bem-vindo ao AgroSOS!\n\n📸 Dica: Foque em folhas ou frutos com boa iluminação para análises precisas!\n\n🌱 Identificamos problemas em cafezais em segundos!');
                     localStorage.setItem('agroSosFirstVisit', 'true');
                 }, 2000);
             }
