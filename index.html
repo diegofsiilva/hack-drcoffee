@@ -1,516 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroSOS - Assistente Agrícola Inteligente</title>
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQWdyb1NPUyIsInNob3J0X25hbWUiOiJBZ3JvU09TIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMyMjc3M2QiLCJ0aGVtZV9jb2xvciI6IiMyMjc3M2QifQ==">
     <meta name="theme-color" content="#22773d">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            min-height: 100vh;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .header {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .tagline {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-        }
-
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #22c55e;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-
-        .main-actions {
-            padding: 20px;
-        }
-
-        .analyze-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 20px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
-            margin-bottom: 15px;
-        }
-
-        .analyze-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(34, 197, 94, 0.4);
-        }
-
-        .secondary-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .secondary-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            padding: 15px 10px;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .secondary-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border-radius: 20px;
-            padding: 20px;
-            width: 90%;
-            max-width: 380px;
-            max-height: 90vh;
-            overflow-y: auto;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .camera-preview {
-            width: 100%;
-            height: 200px;
-            background: #000;
-            border-radius: 15px;
-            margin: 20px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .camera-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 150px;
-            height: 150px;
-            border: 3px solid #22c55e;
-            border-radius: 15px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .capture-btn {
-            background: #22c55e;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            margin: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .capture-btn:hover {
-            transform: scale(1.1);
-            background: #16a34a;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.3);
-            border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            color: white;
-            cursor: pointer;
-            font-size: 20px;
-            line-height: 32px;
-            transition: all 0.3s ease;
-        }
-
-        .close-btn:hover {
-            background: rgba(239, 68, 68, 0.5);
-        }
-
-        .result-modal .modal-content {
-            text-align: left;
-        }
-
-        .disease-info {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .confidence {
-            display: inline-block;
-            background: #22c55e;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        .treatment-section, .prevention-section {
-            margin-top: 20px;
-        }
-
-        .treatment-option, .prevention-option {
-            background: rgba(34, 197, 94, 0.2);
-            border: 1px solid rgba(34, 197, 94, 0.4);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-        }
-
-        .price {
-            color: #22c55e;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .community-section {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .community-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .community-item:last-child {
-            border-bottom: none;
-        }
-
-        .distance {
-            background: rgba(34, 197, 94, 0.3);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #22c55e;
-            animation: spin 1s ease-in-out infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .offline-indicator {
-            background: #f59e0b;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin: 10px 20px;
-            text-align: center;
-        }
-
-        .map-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            height: 150px;
-            margin: 15px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .map-pin {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #ef4444;
-            border-radius: 50%;
-            animation: ping 2s infinite;
-        }
-
-        @keyframes ping {
-            0% { transform: scale(1); opacity: 1; }
-            75%, 100% { transform: scale(2); opacity: 0; }
-        }
-
-        .navigation {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 400px;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            padding: 5px 15px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: rgba(34, 197, 94, 0.3);
-        }
-
-        .nav-icon {
-            font-size: 20px;
-        }
-
-        .nav-label {
-            font-size: 10px;
-            opacity: 0.8;
-        }
-
-        .screen {
-            display: none;
-            padding: 20px;
-            padding-bottom: 100px;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        .alert-item {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-        }
-
-        .history-item {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        .bounce-in {
-            animation: bounceIn 0.6s ease;
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        .image-preview {
-            max-width: 100%;
-            width: auto;
-            height: auto;
-            max-height: 200px;
-            border-radius: 10px;
-            margin: 10px 0;
-            object-fit: contain;
-        }
-
-        .warning {
-            color: #f59e0b;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-
-        /* Media Queries para Responsividade */
-        @media (max-width: 400px) {
-            .container {
-                max-width: 100%;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 15px;
-                font-size: 14px;
-            }
-
-            .analyze-btn, .secondary-btn {
-                font-size: 16px;
-                padding: 15px;
-            }
-
-            .disease-info, .treatment-section, .prevention-section, .community-section {
-                padding: 10px;
-            }
-
-            .disease-info h4 {
-                font-size: 18px;
-            }
-
-            .confidence {
-                font-size: 11px;
-                padding: 4px 8px;
-            }
-
-            .close-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 18px;
-                line-height: 28px;
-            }
-
-            .camera-preview {
-                height: 180px;
-            }
-
-            .camera-overlay {
-                width: 120px;
-                height: 120px;
-            }
-        }
-
-        @media (max-height: 600px) {
-            .modal-content {
-                max-height: 85vh;
-                padding: 10px;
-            }
-
-            .image-preview {
-                max-height: 150px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/styles.css">
+ 
 </head>
 <body>
     <div class="container">
@@ -783,6 +282,8 @@
             </div>
         </div>
     </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
 
     <script>
         // Simular dados dinâmicos
@@ -1023,6 +524,78 @@
                 showResult(result);
             }, processingTime);
         }
+
+        // ===== Integração IA Real com TensorFlow.js =====
+const MODEL_URL = '/model/model.json'; // altere para o caminho real do modelo
+const classLabels = [
+    'Ferrugem do Cafeeiro',
+    'Cercosporiose',
+    'Broca do Café',
+    'Mancha de Phoma',
+    'Antracnose',
+    'Bicho-Mineiro',
+    'Mancha Aureolada',
+    'Ascochyta',
+    'Deficiência de Nitrogênio',
+    'Deficiência de Potássio',
+    'Deficiência de Fósforo',
+    'Estresse Hídrico',
+    'Planta Saudável'
+];
+
+let model = null;
+(async () => {
+    try {
+        console.log('Carregando modelo IA...');
+        model = await tf.loadLayersModel(MODEL_URL);
+        console.log('✅ Modelo carregado com sucesso');
+    } catch (err) {
+        console.error('Erro ao carregar modelo IA:', err);
+    }
+})();
+
+async function predictWithRealModel(imageBlob) {
+    if (model) {
+        console.warn('Modelo não carregado — usando simulação');
+        return null; // deixa o fluxo cair na simulação
+    }
+
+    const SIZE = 224;
+    const img = new Image();
+    img.src = URL.createObjectURL(imageBlob);
+
+    return new Promise((resolve, reject) => {
+        img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = SIZE;
+            canvas.height = SIZE;
+            ctx.drawImage(img, 0, 0, SIZE, SIZE);
+            const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+
+            // Tensor [1, SIZE, SIZE, 3] normalizado 0-1
+            const arr = [];
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                arr.push(imageData.data[i] / 255);
+                arr.push(imageData.data[i + 1] / 255);
+                arr.push(imageData.data[i + 2] / 255);
+            }
+            const tensor = tf.tensor(arr, [1, SIZE, SIZE, 3]);
+            const prediction = model.predict(tensor);
+            const probs = await prediction.data();
+            prediction.dispose();
+            tensor.dispose();
+
+            // Montar resultado compatível com seu fluxo
+            const preds = classLabels.map((name, i) => ({
+                name,
+                confidence: probs[i]
+            }));
+            resolve(preds);
+        };
+        img.onerror = reject;
+    });
+}
 
         // Simular predição de modelo de IA
         function simulateModelPrediction(imageBlob, quality) {
