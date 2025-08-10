@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroSOS - Assistente Agrícola Inteligente</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQWdyb1NPUyIsInNob3J0X25hbWUiOiJBZ3JvU09TIiwic3RhcnRfdXJsIjoiLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMyMjc3M2QiLCJ0aGVtZV9jb2xvciI6IiMyMjc3M2QifQ==">
+    <meta name="theme-color" content="#22773d">
+    <link rel="stylesheet" href="../styles.css">
+ 
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    html {
+        font-size: clamp(14px, 2.5vw, 16px);
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #1e3a5f 0%, #22773d 100%);
+        color: white;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        min-height: 100vh;
+        position: relative;
+        padding-bottom: 100px;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px 0;
+    }
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .logo-icon {
+        font-size: 32px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    h1 {
+        font-size: clamp(22px, 5vw, 28px);
+        font-weight: 700;
+        color: #fff;
+    }
+    
+    .tagline {
+        opacity: 0.9;
+        font-size: clamp(12px, 3.5vw, 14px);
+    }
+    
+    .ai-status {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        font-size: 12px;
+    }
+    
+    .ai-ready { color: #22c55e; }
+    .ai-loading { color: #f59e0b; }
+    .ai-error { color: #ef4444; }
+    
+    .offline-indicator {
+        background: rgba(34, 197, 94, 0.2);
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+    
+    .screen {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .screen.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #22c55e;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+    
+    .main-actions {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .analyze-btn {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        border: none;
+        padding: clamp(15px, 4vw, 20px) clamp(20px, 8vw, 40px);
+        border-radius: 50px;
+        font-size: clamp(16px, 4vw, 18px);
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+        width: 100%;
+    }
+    
+    .analyze-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(34, 197, 94, 0.4);
+    }
+    
+    .secondary-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .secondary-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: none;
+        padding: clamp(10px, 3vw, 15px);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        font-size: clamp(12px, 3.5vw, 14px);
+        backdrop-filter: blur(10px);
+    }
+    
+    .secondary-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .alert-item {
+        background: rgba(239, 68, 68, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .distance {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 5px;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+    
+    .modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #1e3a5f, #22773d);
+    padding: clamp(15px, 4vw, 30px);
+    border-radius: 20px;
+    width: 80%;
+    min-width: 280px; /* largura mínima para celulares */
+    max-width: 500px; /* largura máxima para não estourar em telas grandes */
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+    
+    .bounce-in {
+        animation: bounceIn 0.5s ease;
+    }
+    
+    @keyframes bounceIn {
+        0% { transform: translate(-50%, -50%) scale(0.3); }
+        50% { transform: translate(-50%, -50%) scale(1.05); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+    
+    .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    
+    .camera-preview {
+        position: relative;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 4/3;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 20px 0;
+    }
+    
+    .camera-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60%;
+        height: auto;
+        aspect-ratio: 1/1;
+        border: 3px solid #22c55e;
+        border-radius: 10px;
+        pointer-events: none;
+    }
+    
+    .capture-btn {
+        background: #22c55e;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        width: 100%;
+        margin: 10px 0;
+    }
+    
+    .image-preview {
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin: 15px 0;
+    }
+    
+    .loading {
+        width: 50px;
+        height: 50px;
+        margin: 20px auto;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid #22c55e;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .confidence {
+        background: rgba(34, 197, 94, 0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .disease-info h4 {
+        color: #22c55e;
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+    
+    .treatment-section, .prevention-section, .community-section {
+        margin: 25px 0;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .treatment-option, .prevention-option {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 10px;
+        margin: 10px 0;
+    }
+    
+    .price {
+        color: #22c55e;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+    
+    .warning {
+        background: rgba(239, 68, 68, 0.2);
+        padding: 10px;
+        border-radius: 8px;
+        border-left: 4px solid #ef4444;
+        margin: 10px 0;
+        font-size: 14px;
+    }
+    
+    .map-container {
+        background: rgba(255, 255, 255, 0.1);
+        height: auto;
+        aspect-ratio: 16/9;
+        border-radius: 15px;
+        margin: 20px 0;
+        position: relative;
+        background-image: 
+            radial-gradient(circle at 30% 20%, rgba(34, 197, 94, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 70% 60%, rgba(239, 68, 68, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 45% 40%, rgba(245, 158, 11, 0.3) 0%, transparent 50%);
+    }
+    
+    .map-pin {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #ef4444;
+        border-radius: 50%;
+        border: 2px solid white;
+        animation: pulse 2s infinite;
+    }
+    
+    .community-item, .history-item {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 10px;
+        margin: 10px 0;
+        gap: 15px;
+    }
+    
+    .navigation {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 58, 95, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 25px 25px 0 0;
+        padding: 15px;
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        max-width: 400px;
+        justify-content: space-around;
+    }
+    
+    .nav-item {
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 10px;
+        border-radius: 12px;
+        flex: 1;
+    }
+    
+    .nav-item.active {
+        background: rgba(34, 197, 94, 0.3);
+    }
+    
+    .nav-icon {
+        font-size: clamp(16px, 5vw, 20px);
+        margin-bottom: 5px;
+    }
+    
+    .nav-label {
+        font-size: clamp(10px, 3vw, 12px);
+        opacity: 0.8;
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    .result-modal .modal-content {
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 480px) {
+        .container {
+            padding: 15px;
+        }
+        
+        .stats {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .modal-content {
+            padding: 20px;
+            margin: 20px;
+        }
+        
+        .navigation {
+            gap: 10px;
+            padding: 10px;
+        }
+    }
+    </style>
+    
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🌱</div>
+                <h1>CoffAI</h1>
+            </div>
+            <div class="tagline">Seu assistente para cafezais saudáveis</div>
+        </div>
+
+        <!-- Offline Indicator -->
+        <div class="offline-indicator" id="offlineIndicator" style="display: none;">
+            📱 Modo Offline Ativo - IA funcionando localmente
+        </div>
+
+        <!-- Home Screen -->
+        <div class="screen active" id="homeScreen">
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="analysisCount">1,247</div>
+                    <div class="stat-label">Análises hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">96%</div>
+                    <div class="stat-label">Precisão da IA</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">R$ 150</div>
+                    <div class="stat-label">Economia média</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="userCount">12.5K</div>
+                    <div class="stat-label">Produtores ativos</div>
+                </div>
+            </div>
+
+            <!-- Main Actions -->
+            <div class="main-actions">
+                <button class="analyze-btn" onclick="openCamera()" aria-label="Iniciar análise de planta">
+                    📸 Analisar Planta
+                </button>
+                
+                <div class="secondary-actions">
+                    <button class="secondary-btn" onclick="showScreen('communityScreen')" aria-label="Ver mapa regional">
+                        🗺️ Mapa Regional
+                    </button>
+                    <button class="secondary-btn" onclick="showScreen('historyScreen')" aria-label="Ver histórico de análises">
+                        📋 Histórico
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div style="padding: 0 20px;">
+                <h3 style="margin-bottom: 15px;">⚠️ Alertas na Região</h3>
+                <div class="alert-item">
+                    <strong>Ferrugem do Cafeeiro</strong><br>
+                    <small>3 casos reportados em um raio de 5km</small>
+                    <div class="distance">2.3km de distância</div>
+                </div>
+                <div class="alert-item">
+                    <strong>Broca do Café</strong><br>
+                    <small>Surto ativo - 8 propriedades afetadas</small>
+                    <div class="distance">4.7km de distância</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Screen -->
+        <div class="screen" id="communityScreen">
+            <h2 style="margin-bottom: 20px;">🌍 Comunidade Regional</h2>
+            
+            <div class="map-container">
+                <div class="map-pin" style="top: 20%; left: 30%;"></div>
+                <div class="map-pin" style="top: 60%; left: 70%;"></div>
+                <div class="map-pin" style="top: 40%; left: 45%;"></div>
+                <div class="map-pin" style="top: 80%; left: 20%;"></div>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.7);">
+                    Região de Minas Gerais<br>
+                    <small>4 surtos ativos detectados</small>
+                </div>
+            </div>
+
+            <div class="community-section">
+                <h4>Casos Recentes (últimas 24h)</h4>
+                <div class="community-item">
+                    <div>🔴</div>
+                    <div>
+                        <strong>João Silva</strong> - Ferrugem severa<br>
+                        <small>Fazenda São José</small>
+                    </div>
+                    <div class="distance">1.2km</div>
+                </div>
+                <div class="community-item">
+                    <div>🟡</div>
+                    <div>
+                        <strong>Maria Santos</strong> - Cercosporiose<br>
+                        <small>Sítio Boa Vista</small>
+                    </div>
+                    <div class="distance">3.5km</div>
+                </div>
+                <div class="community-item">
+                    <div>🔴</div>
+                    <div>
+                        <strong>Pedro Costa</strong> - Broca ativa<br>
+                        <small>Fazenda Esperança</small>
+                    </div>
+                    <div class="distance">5.1km</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Screen -->
+        <div class="screen" id="historyScreen">
+            <h2 style="margin-bottom: 20px;">📋 Seu Histórico</h2>
+            
+            <div class="history-item">
+                <div>
+                    <strong>Ferrugem do Cafeeiro</strong><br>
+                    <small>Talhão 3 - Tratado com sucesso</small><br>
+                    <small style="opacity: 0.7;">Há 3 dias</small>
+                </div>
+                <div style="color: #22c55e;">✅</div>
+            </div>
+            
+            <div class="history-item">
+                <div>
+                    <strong>Planta Saudável</strong><br>
+                    <small>Talhão 1 - Sem problemas detectados</small><br>
+                    <small style="opacity: 0.7;">Há 1 semana</small>
+                </div>
+                <div style="color: #22c55e;">✅</div>
+            </div>
+            
+            <div class="history-item">
+                <div>
+                    <strong>Cercosporiose</strong><br>
+                    <small>Talhão 2 - Em tratamento</small><br>
+                    <small style="opacity: 0.7;">Há 2 semanas</small>
+                </div>
+                <div style="color: #f59e0b;">🔄</div>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; opacity: 0.7;">
+                <p>Economia total: <strong style="color: #22c55e;">R$ 450,00</strong></p>
+                <p>Versus consultoria tradicional</p>
+            </div>
+        </div>
+
+        <!-- Camera Choice Modal -->
+        <div class="modal" id="cameraModal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="closeModal()" aria-label="Fechar modal">&times;</button>
+                <h3>📸 Analisar Planta</h3>
+                <p>Escolha como fornecer a imagem da planta:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; margin: 20px 0;">
+                    <button class="capture-btn" onclick="openCameraStream()" style="width: 100%; border-radius: 10px; padding: 15px;" aria-label="Usar câmera para capturar imagem">
+                        📷 Usar Câmera
+                    </button>
+                    <button class="capture-btn" onclick="triggerFileUpload()" style="width: 100%; border-radius: 10px; padding: 15px;" aria-label="Fazer upload de imagem">
+                        📤 Fazer Upload
+                    </button>
+                </div>
+                
+                <!-- Hidden file input for uploads -->
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+                
+                <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
+                    Dica: Fotografe folhas ou frutos com boa iluminação, fundo limpo e foco nítido.
+                </p>
+            </div>
+        </div>
+
+        <!-- Camera Stream Modal -->
+        <div class="modal" id="cameraStreamModal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="closeModal()" aria-label="Fechar modal">&times;</button>
+                <h3>📸 Fotografar Planta</h3>
+                <p>Centralize a folha ou fruto no quadro verde</p>
+                
+                <div class="camera-preview">
+                    <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <canvas id="cameraCanvas" style="display: none;"></canvas>
+                    <div class="camera-overlay"></div>
+                </div>
+                
+                <button class="capture-btn" onclick="capturePhotoFromCamera()" aria-label="Capturar foto">📸</button>
+                <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
+                    Evite sombras, mantenha a câmera estável e use luz natural.
+                </p>
+            </div>
+        </div>
+
+        <!-- Analysis Modal -->
+        <div class="modal" id="analysisModal">
+            <div class="modal-content">
+                <h3>🤖 Analisando...</h3>
+                <div class="loading"></div>
+                <p>Processando imagem com IA avançada</p>
+                <p style="font-size: 12px; opacity: 0.7;">Isso leva alguns segundos</p>
+            </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div class="modal result-modal" id="resultModal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="closeModal()" aria-label="Fechar modal">&times;</button>
+                <h3>🎯 Diagnóstico Completo</h3>
+                <img id="analyzedImage" class="image-preview" style="display: none;" alt="Imagem analisada">
+                
+                <div class="disease-info">
+                    <h4 id="diseaseName"></h4>
+                    <div class="confidence" id="confidence"></div>
+                    <p style="margin-top: 10px; opacity: 0.9;" id="diseaseDescription"></p>
+                    <p class="warning" id="imageQualityWarning" style="display: none;"></p>
+                </div>
+
+                <div class="treatment-section">
+                    <h4>💊 Tratamentos Recomendados</h4>
+                    <div id="treatments"></div>
+                </div>
+
+                <div class="prevention-section">
+                    <h4>🛡️ Prevenção</h4>
+                    <div id="preventions"></div>
+                </div>
+
+                <div class="community-section">
+                    <h4>👥 Outros Casos na Região</h4>
+                    <div class="community-item">
+                        <div>📍</div>
+                        <div id="communityCases"></div>
+                    </div>
+                    <div class="community-item">
+                        <div>⏰</div>
+                        <div id="communityTime"></div>
+                    </div>
+                </div>
+
+                <button class="analyze-btn" onclick="closeModal()" style="margin-top: 20px;" aria-label="Fechar resultado">
+                    🚪 Fechar
+                </button>
+                <button class="secondary-btn" onclick="openCamera()" style="margin-top: 10px; display: none;" id="retryButton" aria-label="Tentar novamente">
+                    📸 Tentar Novamente
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-item active" onclick="showScreen('homeScreen')" aria-label="Ir para tela inicial">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Início</div>
+            </div>
+            <div class="nav-item" onclick="openCamera()" aria-label="Analisar planta">
+                <div class="nav-icon">📸</div>
+                <div class="nav-label">Analisar</div>
+            </div>
+            <div class="nav-item" onclick="showScreen('communityScreen')" aria-label="Ver comunidade">
+                <div class="nav-icon">🗺️</div>
+                <div class="nav-label">Comunidade</div>
+            </div>
+            <div class="nav-item" onclick="showScreen('historyScreen')" aria-label="Ver histórico">
+                <div class="nav-icon">📋</div>
+                <div class="nav-label">Histórico</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+
+    <script>
+        // Simular dados dinâmicos
+        let analysisCount = 1247;
+        let userCount = 12500;
+
+        // Atualizar contadores em tempo real
+        setInterval(() => {
+            analysisCount += Math.floor(Math.random() * 3);
+            userCount += Math.floor(Math.random() * 2);
+            
+            document.getElementById('analysisCount').textContent = analysisCount.toLocaleString();
+            document.getElementById('userCount').textContent = (userCount / 1000).toFixed(1) + 'K';
+        }, 3000);
+
+        // Detectar se está offline
+        function updateOnlineStatus() {
+            const indicator = document.getElementById('offlineIndicator');
+            if (!navigator.onLine) {
+                indicator.style.display = 'block';
+            } else {
+                indicator.style.display = 'none';
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // Navegação entre telas
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            document.getElementById(screenId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (screenId === 'homeScreen') {
+                document.querySelector('.nav-item').classList.add('active');
+            } else {
+                document.querySelector(`.nav-item[onclick="showScreen('${screenId}')"]`).classList.add('active');
+            }
+        }
+
+        // Abrir modal de escolha (câmera ou upload)
+        function openCamera() {
+            document.getElementById('cameraModal').style.display = 'block';
+            document.querySelector('#cameraModal .modal-content').classList.add('bounce-in');
+        }
+
+        // Abrir stream da câmera
+        async function openCameraStream() {
+            closeModal();
+            const video = document.getElementById('cameraVideo');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+                document.getElementById('cameraStreamModal').style.display = 'block';
+                document.querySelector('#cameraStreamModal .modal-content').classList.add('bounce-in');
+            } catch (error) {
+                console.error('Erro ao acessar a câmera:', error);
+                alert('Não foi possível acessar a câmera. Tente fazer upload de uma imagem.');
+                closeModal();
+                openCamera();
+            }
+        }
+
+        // Acionar input de upload
+        function triggerFileUpload() {
+            document.getElementById('imageUpload').click();
+        }
+
+        // Lidar com upload de arquivo
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                closeModal();
+                preprocessImage(file, processImage);
+            }
+        }
+
+        // Capturar foto da câmera
+        function capturePhotoFromCamera() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            canvas.toBlob(blob => {
+                const stream = video.srcObject;
+                stream.getTracks().forEach(track => track.stop());
+                
+                closeModal();
+                preprocessImage(blob, processImage);
+            }, 'image/jpeg', 0.95);
+        }
+
+        // Pré-processar imagem
+        function preprocessImage(imageBlob, callback) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Redimensionar para 224x224 (tamanho padrão para modelos de IA)
+                canvas.width = 224;
+                canvas.height = 224;
+                
+                // Normalizar e centralizar
+                const scale = Math.min(img.width / 224, img.height / 224);
+                const x = (canvas.width - img.width / scale) / 2;
+                const y = (canvas.height - img.height / scale) / 2;
+                
+                ctx.drawImage(img, 0, 0, img.width, img.height, x, y, img.width / scale, img.height / scale);
+                
+                // Verificar qualidade da imagem
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const quality = checkImageQuality(imageData);
+                
+                canvas.toBlob(processedBlob => {
+                    callback(processedBlob, quality, URL.createObjectURL(imageBlob));
+                }, 'image/jpeg', 0.95);
+            };
+            img.src = URL.createObjectURL(imageBlob);
+        }
+
+        // Verificar qualidade da imagem
+        function checkImageQuality(imageData) {
+            const pixels = imageData.data;
+            let brightnessSum = 0;
+            let varianceSum = 0;
+            let greenPixels = 0;
+            
+            // Calcular brilho médio e variância
+            for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const brightness = (r + g + b) / 3;
+                brightnessSum += brightness;
+                
+                // Detectar presença de verde (folhas)
+                if (g > r * 1.2 && g > b * 1.2) {
+                    greenPixels++;
+                }
+            }
+            
+            const meanBrightness = brightnessSum / (pixels.length / 4);
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+                varianceSum += Math.pow(brightness - meanBrightness, 2);
+            }
+            
+            const variance = varianceSum / (pixels.length / 4);
+            const greenRatio = greenPixels / (pixels.length / 4);
+            
+            // Critérios de qualidade
+            const isBlurry = variance < 1000;
+            const isPoorlyLit = meanBrightness < 50 || meanBrightness > 200;
+            const isLeafPresent = greenRatio > 0.1;
+            
+            return {
+                isAcceptable: !isBlurry && !isPoorlyLit && isLeafPresent,
+                warnings: [
+                    isBlurry ? 'Imagem parece estar desfocada.' : '',
+                    isPoorlyLit ? 'Iluminação inadequada (muito escura ou clara).' : '',
+                    !isLeafPresent ? 'Folha ou fruto não detectado claramente.' : ''
+                ].filter(w => w)
+            };
+        }
+
+        // Processar imagem com IA simulada
+        function processImage(imageBlob, quality, imageUrl) {
+            document.getElementById('analysisModal').style.display = 'block';
+            
+            const processingTime = quality.isAcceptable ? 3000 : 2000;
+            
+            setTimeout(() => {
+                document.getElementById('analysisModal').style.display = 'none';
+                
+                if (!quality.isAcceptable) {
+                    document.getElementById('diseaseName').textContent = 'Imagem de Baixa Qualidade';
+                    document.getElementById('confidence').textContent = '0% de confiança';
+                    document.getElementById('diseaseDescription').textContent = 'Não foi possível identificar a doença devido a problemas com a imagem. Tente novamente com uma foto mais clara.';
+                    document.getElementById('imageQualityWarning').textContent = quality.warnings.join(' ');
+                    document.getElementById('imageQualityWarning').style.display = 'block';
+                    document.getElementById('treatments').innerHTML = '';
+                    document.getElementById('preventions').innerHTML = '';
+                    document.getElementById('communityCases').textContent = 'Nenhum dado disponível';
+                    document.getElementById('communityTime').textContent = 'Tire uma nova foto com boa iluminação';
+                    document.getElementById('analyzedImage').src = imageUrl;
+                    document.getElementById('analyzedImage').style.display = 'block';
+                    document.getElementById('retryButton').style.display = 'block';
+                    document.getElementById('resultModal').style.display = 'block';
+                    document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
+                    vibrate([200, 100, 200]);
+                    return;
+                }
+                
+                const predictions = simulateModelPrediction(imageBlob, quality);
+                const topPrediction = predictions.reduce((a, b) => a.confidence > b.confidence ? a : b);
+                
+                if (topPrediction.confidence < 0.5) {
+                    document.getElementById('diseaseName').textContent = 'Diagnóstico Incerto';
+                    document.getElementById('confidence').textContent = `${Math.round(topPrediction.confidence * 100)}% de confiança`;
+                    document.getElementById('diseaseDescription').textContent = 'Não foi possível identificar a doença com confiança. Tente capturar uma imagem mais clara, focando nas folhas ou frutos.';
+                    document.getElementById('imageQualityWarning').textContent = 'Confiança baixa. Certifique-se de que a iluminação é adequada e a imagem está nítida.';
+                    document.getElementById('imageQualityWarning').style.display = 'block';
+                    document.getElementById('treatments').innerHTML = '';
+                    document.getElementById('preventions').innerHTML = '';
+                    document.getElementById('communityCases').textContent = 'Nenhum dado disponível';
+                    document.getElementById('communityTime').textContent = 'Tire uma nova foto para melhor análise';
+                    document.getElementById('analyzedImage').src = imageUrl;
+                    document.getElementById('analyzedImage').style.display = 'block';
+                    document.getElementById('retryButton').style.display = 'block';
+                    document.getElementById('resultModal').style.display = 'block';
+                    document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
+                    vibrate([200, 100, 200]);
+                    return;
+                }
+                
+                const result = {
+                    ...diseaseDatabase.find(d => d.name === topPrediction.name),
+                    confidence: Math.round(topPrediction.confidence * 100),
+                    imageUrl
+                };
+                
+                showResult(result);
+            }, processingTime);
+        }
+
+        // ===== Integração IA Real com TensorFlow.js =====
+const MODEL_URL = '/model/model.json'; // altere para o caminho real do modelo
+const classLabels = [
+    'Ferrugem do Cafeeiro',
+    'Cercosporiose',
+    'Broca do Café',
+    'Mancha de Phoma',
+    'Antracnose',
+    'Bicho-Mineiro',
+    'Mancha Aureolada',
+    'Ascochyta',
+    'Deficiência de Nitrogênio',
+    'Deficiência de Potássio',
+    'Deficiência de Fósforo',
+    'Estresse Hídrico',
+    'Planta Saudável'
+];
+
+let model = null;
+(async () => {
+    try {
+        console.log('Carregando modelo IA...');
+        model = await tf.loadLayersModel(MODEL_URL);
+        console.log('✅ Modelo carregado com sucesso');
+    } catch (err) {
+        console.error('Erro ao carregar modelo IA:', err);
+    }
+})();
+
+async function predictWithRealModel(imageBlob) {
+    if (model) {
+        console.warn('Modelo não carregado — usando simulação');
+        return null; // deixa o fluxo cair na simulação
+    }
+
+    const SIZE = 224;
+    const img = new Image();
+    img.src = URL.createObjectURL(imageBlob);
+
+    return new Promise((resolve, reject) => {
+        img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = SIZE;
+            canvas.height = SIZE;
+            ctx.drawImage(img, 0, 0, SIZE, SIZE);
+            const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+
+            // Tensor [1, SIZE, SIZE, 3] normalizado 0-1
+            const arr = [];
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                arr.push(imageData.data[i] / 255);
+                arr.push(imageData.data[i + 1] / 255);
+                arr.push(imageData.data[i + 2] / 255);
+            }
+            const tensor = tf.tensor(arr, [1, SIZE, SIZE, 3]);
+            const prediction = model.predict(tensor);
+            const probs = await prediction.data();
+            prediction.dispose();
+            tensor.dispose();
+
+            // Montar resultado compatível com seu fluxo
+            const preds = classLabels.map((name, i) => ({
+                name,
+                confidence: probs[i]
+            }));
+            resolve(preds);
+        };
+        img.onerror = reject;
+    });
+}
+
+        // Simular predição de modelo de IA
+        function simulateModelPrediction(imageBlob, quality) {
+            // Simular características extraídas da imagem
+            const features = {
+                leafColor: Math.random(), // 0 (escuro) a 1 (claro)
+                spotPresence: Math.random(), // 0 (nenhum) a 1 (muitos)
+                holePresence: Math.random(), // 0 (nenhum) a 1 (muitos)
+                yellowing: Math.random(), // 0 (sem amarelecimento) a 1 (muito)
+                wilting: Math.random(), // 0 (sem murchamento) a 1 (muito)
+                humidity: Math.random() * 0.8 + 0.2, // 20-100%
+                temperature: Math.random() * 15 + 15, // 15-30°C
+                leafDeformation: Math.random() // 0 (sem deformação) a 1 (muita)
+            };
+            
+            // Ajustar características com base na qualidade da imagem
+            if (!quality.isAcceptable) {
+                features.leafColor *= 0.7;
+                features.spotPresence *= 0.7;
+                features.holePresence *= 0.7;
+                features.yellowing *= 0.7;
+                features.wilting *= 0.7;
+                features.leafDeformation *= 0.7;
+            }
+            
+            const predictions = diseaseDatabase.map(disease => {
+                let confidence = 0.05; // Confiança base baixa
+                
+                switch (disease.name) {
+                    case 'Ferrugem do Cafeeiro':
+                        confidence = (features.spotPresence > 0.55 && features.leafColor > 0.5 && features.humidity > 0.7) ? 0.95 : 0.1;
+                        break;
+                    case 'Cercosporiose':
+                        confidence = (features.spotPresence > 0.5 && features.leafColor < 0.5 && features.humidity > 0.65) ? 0.92 : 0.08;
+                        break;
+                    case 'Broca do Café':
+                        confidence = (features.holePresence > 0.6 && features.temperature > 20) ? 0.93 : 0.07;
+                        break;
+                    case 'Mancha de Phoma':
+                        confidence = (features.spotPresence > 0.5 && features.leafColor < 0.45 && features.humidity > 0.75) ? 0.90 : 0.06;
+                        break;
+                    case 'Antracnose':
+                        confidence = (features.spotPresence > 0.6 && features.humidity > 0.85 && features.temperature < 25) ? 0.91 : 0.05;
+                        break;
+                    case 'Bicho-Mineiro':
+                        confidence = (features.holePresence > 0.5 && features.leafDeformation > 0.6) ? 0.94 : 0.06;
+                        break;
+                    case 'Mancha Aureolada':
+                        confidence = (features.spotPresence > 0.45 && features.yellowing > 0.5 && features.humidity > 0.6) ? 0.90 : 0.05;
+                        break;
+                    case 'Ascochyta':
+                        confidence = (features.spotPresence > 0.5 && features.wilting > 0.5 && features.humidity > 0.7) ? 0.89 : 0.04;
+                        break;
+                    case 'Deficiência de Nitrogênio':
+                        confidence = (features.yellowing > 0.7 && features.leafColor < 0.4 && features.wilting < 0.3) ? 0.92 : 0.03;
+                        break;
+                    case 'Deficiência de Potássio':
+                        confidence = (features.yellowing > 0.6 && features.leafDeformation > 0.5 && features.wilting < 0.4) ? 0.91 : 0.03;
+                        break;
+                    case 'Deficiência de Fósforo':
+                        confidence = (features.leafColor < 0.3 && features.wilting > 0.6 && features.yellowing < 0.4) ? 0.90 : 0.03;
+                        break;
+                    case 'Estresse Hídrico':
+                        confidence = (features.wilting > 0.7 && features.humidity < 0.4 && features.yellowing > 0.5) ? 0.93 : 0.02;
+                        break;
+                    case 'Planta Saudável':
+                        confidence = (features.leafColor > 0.7 && features.spotPresence < 0.3 && features.holePresence < 0.3 && features.yellowing < 0.3 && features.wilting < 0.3) ? 0.98 : 0.02;
+                        break;
+                }
+                
+                confidence *= quality.isAcceptable ? 1 : 0.6;
+                return { name: disease.name, confidence };
+            });
+            
+            // Ajustar normalização para preservar confidências altas
+            const maxConfidence = Math.max(...predictions.map(p => p.confidence));
+            if (maxConfidence > 0.9) {
+                predictions.forEach(p => {
+                    if (p.confidence < maxConfidence) {
+                        p.confidence *= 0.3; // Reduzir confidências menores
+                    }
+                });
+            }
+            
+            const total = predictions.reduce((sum, p) => sum + p.confidence, 0);
+            predictions.forEach(p => p.confidence /= total);
+            
+            return predictions;
+        }
+
+        // Mostrar resultado
+        function showResult(result) {
+            document.getElementById('diseaseName').textContent = result.name;
+            document.getElementById('confidence').textContent = `${result.confidence}% de confiança`;
+            document.getElementById('diseaseDescription').textContent = result.description;
+            document.getElementById('imageQualityWarning').style.display = 'none';
+            
+            const treatmentSection = document.getElementById('treatments');
+            treatmentSection.innerHTML = '';
+            result.treatments.forEach(treatment => {
+                const div = document.createElement('div');
+                div.className = 'treatment-option';
+                div.innerHTML = `
+                    <strong>${treatment.type}</strong>
+                    <p>${treatment.name}</p>
+                    <p class="price">Custo: ${treatment.cost}</p>
+                `;
+                treatmentSection.appendChild(div);
+            });
+            
+            const preventionSection = document.getElementById('preventions');
+            preventionSection.innerHTML = '';
+            result.preventions.forEach(prevention => {
+                const div = document.createElement('div');
+                div.className = 'prevention-option';
+                div.innerHTML = `
+                    <strong>${prevention.type}</strong>
+                    <p>${prevention.name}</p>
+                `;
+                preventionSection.appendChild(div);
+            });
+            
+            document.getElementById('communityCases').textContent = result.communityCases;
+            document.getElementById('communityTime').textContent = result.communityTime;
+            
+            document.getElementById('analyzedImage').src = result.imageUrl;
+            document.getElementById('analyzedImage').style.display = 'block';
+            
+            document.getElementById('retryButton').style.display = result.confidence < 90 ? 'block' : 'none';
+            
+            document.getElementById('resultModal').style.display = 'block';
+            document.querySelector('#resultModal .modal-content').classList.add('bounce-in');
+            
+            addToHistory(result);
+            
+            analysisCount++;
+            document.getElementById('analysisCount').textContent = analysisCount.toLocaleString();
+            
+            vibrate([100, 50, 100]);
+            playSound('success');
+        }
+
+        // Adicionar ao histórico
+        function addToHistory(result) {
+            const historyData = JSON.parse(localStorage.getItem('agroSosHistory') || '[]');
+            historyData.unshift({
+                ...result,
+                date: new Date().toISOString(),
+                id: Date.now()
+            });
+            
+            if (historyData.length > 10) {
+                historyData.splice(10);
+            }
+            
+            localStorage.setItem('agroSosHistory', JSON.stringify(historyData));
+            loadHistory();
+        }
+
+        // Carregar histórico
+        function loadHistory() {
+            const historyData = JSON.parse(localStorage.getItem('agroSosHistory') || '[]');
+            const historyScreen = document.getElementById('historyScreen');
+            
+            const oldItems = historyScreen.querySelectorAll('.history-item');
+            oldItems.forEach(item => item.remove());
+            
+            const title = document.createElement('h2');
+            title.textContent = '📋 Seu Histórico';
+            title.style.marginBottom = '20px';
+            historyScreen.insertBefore(title, historyScreen.firstChild);
+            
+            if (historyData.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.style.textAlign = 'center';
+                emptyDiv.style.opacity = '0.7';
+                emptyDiv.style.marginTop = '50px';
+                emptyDiv.innerHTML = `
+                    <p>📱 Nenhuma análise ainda</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Comece fotografando uma planta!</p>
+                `;
+                historyScreen.appendChild(emptyDiv);
+                return;
+            }
+            
+            historyData.forEach(item => {
+                const historyDiv = document.createElement('div');
+                historyDiv.className = 'history-item';
+                
+                const date = new Date(item.date);
+                const timeAgo = getTimeAgo(date);
+                
+                const status = item.name === 'Planta Saudável' ? '✅' : 
+                              item.confidence > 90 ? '✅' : '🔄';
+                
+                historyDiv.innerHTML = `
+                    <div>
+                        <strong>${item.name}</strong><br>
+                        <small>Confiança: ${item.confidence}%</small><br>
+                        <small style="opacity: 0.7;">${timeAgo}</small>
+                    </div>
+                    <div style="color: #22c55e;">${status}</div>
+                `;
+                
+                historyScreen.appendChild(historyDiv);
+            });
+            
+            const economyDiv = document.createElement('div');
+            economyDiv.style.marginTop = '30px';
+            economyDiv.style.textAlign = 'center';
+            economyDiv.style.opacity = '0.7';
+            
+            const totalSavings = historyData.length * 150;
+            economyDiv.innerHTML = `
+                <p>Economia total: <strong style="color: #22c55e;">R$ ${totalSavings.toLocaleString()}</strong></p>
+                <p>Versus consultoria tradicional</p>
+            `;
+            historyScreen.appendChild(economyDiv);
+        }
+
+        // Calcular tempo decorrido
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 60) return `Há ${diffMins} minutos`;
+            if (diffHours < 24) return `Há ${diffHours} horas`;
+            return `Há ${diffDays} dias`;
+        }
+
+        // Fechar modal
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+            
+            const video = document.getElementById('cameraVideo');
+            if (video.srcObject) {
+                const stream = video.srcObject;
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        });
+
+        // Verificar se algum modal está aberto
+        function isModalOpen() {
+            const modals = document.querySelectorAll('.modal');
+            return Array.from(modals).some(modal => modal.style.display === 'block');
+        }
+
+        // Configurar PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4ge30p')
+                .then(() => console.log('PWA instalado com sucesso'))
+                .catch(() => console.log('Falha na instalação do PWA'));
+        }
+
+        // Simular instalação PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            setTimeout(() => {
+                if (deferredPrompt) {
+                    const installBtn = document.createElement('button');
+                    installBtn.textContent = '📱 Instalar App';
+                    installBtn.className = 'secondary-btn';
+                    installBtn.style.position = 'fixed';
+                    installBtn.style.top = '20px';
+                    installBtn.style.right = '20px';
+                    installBtn.style.zIndex = '1000';
+                    
+                    installBtn.onclick = () => {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('App instalado!');
+                            }
+                            deferredPrompt = null;
+                            installBtn.remove();
+                        });
+                    };
+                    
+                    document.body.appendChild(installBtn);
+                }
+            }, 5000);
+        });
+
+        // Navegação por gestos (swipe)
+        let startY = 0;
+        let startX = 0;
+        let isScrolling = false;
+
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            isScrolling = false;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            const currentY = e.touches[0].clientY;
+            const diffY = Math.abs(startY - currentY);
+            if (diffY > 20) {
+                isScrolling = true;
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (isScrolling) return;
+
+            const endY = e.changedTouches[0].clientY;
+            const diffY = startY - endY;
+
+            if (diffY > 100 && !isModalOpen()) {
+                openCamera();
+            }
+        });
+
+        // Adicionar efeitos sonoros (simulados)
+        function playSound(type) {
+            console.log(`🔊 Som: ${type}`);
+        }
+
+        // Vibração para feedback háptico
+        function vibrate(pattern = [100]) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // Banco de dados de doenças e problemas expandido
+        const diseaseDatabase = [
+            {
+                name: 'Ferrugem do Cafeeiro',
+                description: 'Doença fúngica causada por *Hemileia vastatrix*. Manchas amarelo-alaranjadas na face inferior das folhas, levando à desfolha e redução da produtividade. Favorecida por umidade alta (>80%) e temperaturas de 20-25°C.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Calda bordalesa (1 kg sulfato de cobre + 1 kg cal virgem em 100 L água)', cost: 'R$ 8,50' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida tebuconazol (0.5 L/ha)', cost: 'R$ 45,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Poda para melhorar ventilação e reduzir umidade' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções semanais em períodos chuvosos' }
+                ],
+                communityCases: '4 produtores relataram casos a 2-5 km',
+                communityTime: 'Último caso há 1 dia'
+            },
+            {
+                name: 'Cercosporiose',
+                description: 'Causada por *Cercospora coffeicola*. Manchas escuras com halo amarelado nas folhas e frutos, podendo causar queda prematura. Comum em umidade >70% e temperaturas de 25-30°C.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Chá de cavalinha (500 g em 5 L água) + óleo de neem (10 mL/L)', cost: 'R$ 5,20' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida azoxistrobina (0.3 L/ha)', cost: 'R$ 38,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Espaçamento adequado para ventilação' },
+                    { type: '🛡️ Monitoramento', name: 'Controle de irrigação para evitar umidade excessiva' }
+                ],
+                communityCases: '3 produtores relataram casos a 3-6 km',
+                communityTime: 'Último caso há 2 dias'
+            },
+            {
+                name: 'Broca do Café',
+                description: 'Praga causada por *Hypothenemus hampei*. Pequenos orifícios nos frutos, levando à queda e perda de qualidade. Favorecida por temperaturas >20°C e frutos maduros.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Armadilha com álcool etílico (30%) + detergente', cost: 'R$ 12,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Inseticida endosulfan (0.4 L/ha)', cost: 'R$ 55,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Coletar frutos caídos para reduzir população' },
+                    { type: '🛡️ Monitoramento', name: 'Uso de armadilhas para monitoramento' }
+                ],
+                communityCases: '5 produtores relataram casos a 1-4 km',
+                communityTime: 'Último caso há 12 horas'
+            },
+            {
+                name: 'Mancha de Phoma',
+                description: 'Doença fúngica (*Phoma tarda*). Manchas marrons com bordas escuras nas folhas, comum em alta umidade (>80%) e sombra excessiva.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de bicarbonato de sódio (10 g/L) + sabão neutro', cost: 'R$ 3,80' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida oxicloreto de cobre (2 kg/ha)', cost: 'R$ 28,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Reduzir sombra com podas seletivas' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções após chuvas prolongadas' }
+                ],
+                communityCases: '2 produtores relataram casos a 4-7 km',
+                communityTime: 'Último caso há 3 dias'
+            },
+            {
+                name: 'Antracnose',
+                description: 'Doença fúngica (*Colletotrichum spp.*). Manchas escuras e afundadas em frutos e folhas, prevalente em períodos chuvosos com umidade >90%.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Extrato de alho (200 g em 5 L água)', cost: 'R$ 4,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida mancozebe (2.5 kg/ha)', cost: 'R$ 35,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Remover frutos infectados do solo' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções frequentes em épocas úmidas' }
+                ],
+                communityCases: '3 produtores relataram casos a 2-6 km',
+                communityTime: 'Último caso há 2 dias'
+            },
+            {
+                name: 'Bicho-Mineiro',
+                description: 'Praga causada por *Leucoptera coffeella*. Pequenas minas sinuosas nas folhas, com larvas que causam desfolha. Favorecida por temperaturas quentes (>25°C).',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de óleo de neem (15 mL/L)', cost: 'R$ 6,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Inseticida clorpirifós (0.5 L/ha)', cost: 'R$ 40,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Remover folhas caídas para reduzir população' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções regulares nas folhas jovens' }
+                ],
+                communityCases: '4 produtores relataram casos a 1-5 km',
+                communityTime: 'Último caso há 18 horas'
+            },
+            {
+                name: 'Mancha Aureolada',
+                description: 'Doença bacteriana (*Pseudomonas syringae*). Manchas circulares com halo amarelado nas folhas, comum em condições úmidas e temperaturas moderadas (18-22°C).',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de cobre (500 g em 100 L água)', cost: 'R$ 7,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Antibiótico agrícola (ex.: oxitetraciclina, 0.3 kg/ha)', cost: 'R$ 50,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Evitar irrigação por aspersão' },
+                    { type: '🛡️ Monitoramento', name: 'Verificar folhas após chuvas' }
+                ],
+                communityCases: '2 produtores relataram casos a 3-7 km',
+                communityTime: 'Último caso há 4 dias'
+            },
+            {
+                name: 'Ascochyta',
+                description: 'Doença fúngica (*Ascochyta coffeae*). Manchas escuras nas folhas, frequentemente acompanhadas de murchamento, prevalente em umidade alta (>75%).',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Solução de bicarbonato de potássio (10 g/L)', cost: 'R$ 4,50' },
+                    { type: '🧪 Tratamento Profissional', name: 'Fungicida captan (2 kg/ha)', cost: 'R$ 30,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Melhorar drenagem do solo' },
+                    { type: '🛡️ Monitoramento', name: 'Inspeções em períodos úmidos' }
+                ],
+                communityCases: '1 produtor relatou caso a 5 km',
+                communityTime: 'Último caso há 5 dias'
+            },
+            {
+                name: 'Deficiência de Nitrogênio',
+                description: 'Folhas com amarelecimento generalizado, especialmente nas folhas mais velhas, devido à falta de nitrogênio. Reduz o crescimento e a produtividade.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Composto orgânico rico em nitrogênio (10 kg/planta)', cost: 'R$ 10,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Adubo NPK 30-10-10 (300 g/planta)', cost: 'R$ 20,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Rotação com leguminosas fixadoras de nitrogênio' },
+                    { type: '🛡️ Monitoramento', name: 'Análise de solo anual' }
+                ],
+                communityCases: '3 produtores relataram casos a 2-8 km',
+                communityTime: 'Último caso há 3 dias'
+            },
+            {
+                name: 'Deficiência de Potássio',
+                description: 'Margens das folhas amareladas ou queimadas, com deformação foliar. Afeta a resistência da planta e a qualidade dos frutos.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Cinza de madeira (500 g/planta)', cost: 'R$ 2,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Adubo NPK 10-10-30 (250 g/planta)', cost: 'R$ 18,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Adubação balanceada com potássio' },
+                    { type: '🛡️ Monitoramento', name: 'Análise foliar periódica' }
+                ],
+                communityCases: '2 produtores relataram casos a 4-6 km',
+                communityTime: 'Último caso há 4 dias'
+            },
+            {
+                name: 'Deficiência de Fósforo',
+                description: 'Folhas escuras com tons arroxeados e murchamento, devido à falta de fósforo. Impacta o desenvolvimento das raízes e frutos.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Farinha de osso (1 kg/planta)', cost: 'R$ 8,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Adubo NPK 10-30-10 (200 g/planta)', cost: 'R$ 15,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Adubação fosfatada no plantio' },
+                    { type: '🛡️ Monitoramento', name: 'Testes de solo antes da safra' }
+                ],
+                communityCases: '1 produtor relatou caso a 6 km',
+                communityTime: 'Último caso há 5 dias'
+            },
+            {
+                name: 'Estresse Hídrico',
+                description: 'Folhas murchas e amareladas devido à falta de água ou irrigação inadequada. Afeta o crescimento e a produção de frutos.',
+                treatments: [
+                    { type: '🏠 Receita Caseira', name: 'Irrigação por gotejamento (20 L/planta/dia)', cost: 'R$ 5,00' },
+                    { type: '🧪 Tratamento Profissional', name: 'Sistema de irrigação automatizado', cost: 'R$ 200,00' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Mulching para reter umidade no solo' },
+                    { type: '🛡️ Monitoramento', name: 'Monitorar umidade do solo semanalmente' }
+                ],
+                communityCases: '5 produtores relataram casos a 1-7 km',
+                communityTime: 'Último caso há 2 dias'
+            },
+            {
+                name: 'Planta Saudável',
+                description: '🎉 Sua planta está saudável! Folhas e frutos sem sinais de doenças, pragas ou deficiências. Continue com práticas preventivas.',
+                treatments: [
+                    { type: '🌱 Manutenção Preventiva', name: 'Adubação balanceada (NPK 20-5-20, 300 g/planta)', cost: 'R$ 15,00/mês' },
+                    { type: '🧪 Prevenção Avançada', name: 'Programa de manejo integrado', cost: 'R$ 85,00/mês' }
+                ],
+                preventions: [
+                    { type: '🌱 Prática Cultural', name: 'Rotação de culturas e poda regular' },
+                    { type: '🛡️ Monitoramento', name: 'Verificações mensais para pragas e doenças' }
+                ],
+                communityCases: 'Nenhum caso de problema na região',
+                communityTime: 'Atualizado hoje'
+            }
+        ];
+
+        // Atualização dinâmica da comunidade
+        function updateCommunityData() {
+            const problems = diseaseDatabase.map(d => d.name).filter(d => d !== 'Planta Saudável');
+            setInterval(() => {
+                if (Math.random() < 0.1) {
+                    const newCase = {
+                        name: `Produtor ${Math.floor(Math.random() * 1000)}`,
+                        problem: problems[Math.floor(Math.random() * problems.length)],
+                        distance: (Math.random() * 8 + 0.5).toFixed(1) + 'km'
+                    };
+                    console.log('🆕 Novo caso na comunidade:', newCase);
+                }
+            }, 15000);
+        }
+
+        // Easter eggs
+        let clickCount = 0;
+        document.querySelector('.logo').addEventListener('click', () => {
+            clickCount++;
+            if (clickCount === 5) {
+                alert(`🎉 Modo desenvolvedor ativado!\n\n📊 Estatísticas:\n• Análises processadas: ${analysisCount}\n• Usuários ativos: ${userCount}\n• Precisão média: 96%\n• Última atualização: ${new Date().toLocaleString()}`);
+                clickCount = 0;
+            }
+        });
+
+        // Simulação de notificações push periódicas
+        setInterval(() => {
+            if (Math.random() < 0.1 && 'Notification' in window && Notification.permission === 'granted') {
+                const alerts = [
+                    'Novo surto de ferrugem detectado a 3km',
+                    'Condições favoráveis para cercosporiose',
+                    '5 produtores trataram broca com sucesso',
+                    'Alerta: chuvas podem favorecer antracnose',
+                    'Bicho-mineiro detectado a 2km'
+                ];
+                
+                const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+                
+                new Notification('🚨 AgroSOS - Alerta Regional', {
+                    body: randomAlert,
+                    icon: '🌱',
+                    requireInteraction: false
+                });
+            }
+        }, 30000);
+
+        // Funcionalidade de compartilhamento
+        function shareResult(result) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'AgroSOS - Diagnóstico',
+                    text: `Diagnostiquei ${result.name} com ${result.confidence}% de confiança usando o AgroSOS!`,
+                    url: 'https://agrosos.com.br'
+                });
+            }
+        }
+
+        // Modo escuro/claro
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+
+        // Salvamento automático de preferências
+        function savePreferences() {
+            const prefs = {
+                notifications: true,
+                offlineMode: true,
+                language: 'pt-BR',
+                theme: document.body.classList.contains('dark-theme') ? 'dark' : 'auto'
+            };
+            localStorage.setItem('agroSosPrefs', JSON.stringify(prefs));
+        }
+
+        // Carregar preferências
+        function loadPreferences() {
+            const prefs = JSON.parse(localStorage.getItem('agroSosPrefs') || '{}');
+            if (prefs.theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+            return prefs;
+        }
+
+        // Inicializar app
+        document.addEventListener('DOMContentLoaded', () => {
+            updateOnlineStatus();
+            loadPreferences();
+            savePreferences();
+            loadHistory();
+            updateCommunityData();
+            
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    vibrate([50]);
+                    playSound('click');
+                });
+            });
+            
+            document.querySelector('.container').classList.add('fade-in');
+            
+            // Exibir mensagem de boas-vindas na primeira visita
+            if (!localStorage.getItem('agroSosFirstVisit')) {
+                setTimeout(() => {
+                    alert('👋 Bem-vindo ao AgroSOS!\n\n📸 Dica: Foque em folhas ou frutos com boa iluminação para análises precisas!\n\n🌱 Identificamos problemas em cafezais e sugerimos tratamentos econômicos.');
+                    localStorage.setItem('agroSosFirstVisit', 'true');
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
